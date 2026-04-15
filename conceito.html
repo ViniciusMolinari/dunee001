@@ -1,0 +1,1744 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dunee 001 - Conceito & Arquitetura do SaaS</title>
+    <style>
+        :root {
+            --primary: #0EA5E9;
+            --primary-light: #38BDF8;
+            --primary-dark: #0369A1;
+            --accent: #F59E0B;
+            --accent-light: #FCD34D;
+            --bg: #0A0A12;
+            --bg-card: #12131E;
+            --bg-card-hover: #1A1B2E;
+            --text: #F1F5F9;
+            --text-muted: #94A3B8;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --info: #6366F1;
+            --border: #1E2035;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ===== TOP NAV ===== */
+        .top-nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background: rgba(10,10,18,0.88);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
+        .logo span:first-child { background: linear-gradient(135deg, var(--primary), var(--primary-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo span:last-child { color: var(--text-muted); font-weight: 400; font-size: 0.85rem; margin-left: 6px; }
+        .nav-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+        .nav-tab {
+            padding: 8px 18px; border-radius: 99px; cursor: pointer;
+            font-size: 0.82rem; font-weight: 600;
+            background: transparent; color: var(--text-muted);
+            border: none; transition: all 0.3s;
+        }
+        .nav-tab:hover { color: var(--text); background: rgba(14,165,233,0.12); }
+        .nav-tab.active { background: var(--primary); color: white; }
+
+        /* ===== HERO ===== */
+        .hero-section {
+            margin-top: 64px;
+            padding: 4rem 2rem;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(14,165,233,0.08) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border);
+        }
+        .hero-section h1 { font-size: 2.4rem; margin-bottom: 0.8rem; font-weight: 800; }
+        .hero-section h1 span { color: var(--primary-light); }
+        .hero-section p { color: var(--text-muted); max-width: 720px; margin: 0 auto 1.5rem; font-size: 1.05rem; }
+        .hero-domain {
+            display: inline-block; padding: 6px 20px; border-radius: 99px;
+            background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.25);
+            font-size: 0.9rem; font-weight: 600; color: var(--primary-light);
+            margin-bottom: 1.5rem;
+        }
+
+        /* ===== SECTION ===== */
+        .section {
+            display: none;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            animation: fadeIn 0.4s ease;
+        }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .section-subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.95rem; }
+
+        /* ===== CARDS GRID ===== */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.2rem;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow); }
+        .card:hover::before { opacity: 1; }
+        .card-icon { font-size: 2rem; margin-bottom: 0.8rem; }
+        .card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .card p { color: var(--text-muted); font-size: 0.88rem; }
+        .card ul { list-style: none; margin-top: 0.8rem; }
+        .card ul li { padding: 4px 0; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+        .card ul li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--primary-light); flex-shrink: 0; }
+
+        .badge {
+            display: inline-block; padding: 2px 10px; border-radius: 99px;
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+        }
+        .badge-mvp { background: rgba(16,185,129,0.15); color: var(--success); }
+        .badge-v2 { background: rgba(59,130,246,0.15); color: var(--info); }
+        .badge-v3 { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .badge-future { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+        /* ===== DASHBOARD PREVIEW ===== */
+        .dashboard-preview {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            min-height: 700px;
+        }
+        .dash-sidebar {
+            background: #0D0D18;
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 0;
+        }
+        .dash-sidebar-brand {
+            padding: 0 1.2rem 1.2rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 0.8rem;
+        }
+        .dash-sidebar-brand h4 { font-size: 0.95rem; }
+        .dash-sidebar-brand p { font-size: 0.72rem; color: var(--text-muted); }
+        .dash-sidebar-item {
+            padding: 10px 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex; align-items: center; gap: 10px;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .dash-sidebar-item:hover { background: rgba(14,165,233,0.08); color: var(--text); }
+        .dash-sidebar-item.active { background: rgba(14,165,233,0.12); color: var(--primary-light); border-left-color: var(--primary); }
+
+        .dash-main { padding: 1.5rem; }
+
+        /* Stats row */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card {
+            background: rgba(14,165,233,0.06);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1.2rem;
+        }
+        .stat-card .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card .stat-value { font-size: 1.8rem; font-weight: 800; margin: 4px 0; }
+        .stat-card .stat-change { font-size: 0.75rem; }
+        .stat-change.up { color: var(--success); }
+        .stat-change.down { color: var(--danger); }
+
+        /* Calendar */
+        .calendar-mock {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+        .cal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 1.2rem;
+            background: rgba(14,165,233,0.06);
+            border-bottom: 1px solid var(--border);
+        }
+        .cal-header h4 { font-size: 1rem; }
+        .cal-grid {
+            display: grid;
+            grid-template-columns: 70px repeat(5, 1fr);
+            font-size: 0.8rem;
+        }
+        .cal-corner {
+            background: rgba(14,165,233,0.04);
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+        }
+        .cal-day-header {
+            padding: 10px;
+            text-align: center;
+            font-weight: 700;
+            background: rgba(14,165,233,0.04);
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid rgba(30,32,53,0.4);
+        }
+        .cal-time {
+            padding: 12px 8px;
+            text-align: right;
+            color: var(--text-muted);
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid rgba(30,32,53,0.4);
+            font-size: 0.72rem;
+        }
+        .cal-slot {
+            padding: 8px 6px;
+            border-bottom: 1px solid rgba(30,32,53,0.4);
+            border-right: 1px solid rgba(30,32,53,0.2);
+            min-height: 48px;
+        }
+        .cal-event {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 6px;
+            padding: 3px 7px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cal-event.ev-corte { background: linear-gradient(135deg, #10B981, #047857); }
+        .cal-event.ev-barba { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+        .cal-event.ev-unha { background: linear-gradient(135deg, #EC4899, #BE185D); }
+        .cal-event.ev-sobra { background: linear-gradient(135deg, #F59E0B, #B45309); }
+
+        /* ===== BOOKING FLOW ===== */
+        .booking-flow {
+            display: flex;
+            gap: 2rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+        .flow-step {
+            min-width: 320px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .flow-step-header {
+            padding: 1rem 1.2rem;
+            background: rgba(14,165,233,0.06);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .flow-step-num {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            font-size: 0.8rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .flow-step-body { padding: 1.2rem; }
+
+        /* ===== ARCHITECTURE ===== */
+        .arch-layer {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 1.2rem;
+            overflow: hidden;
+        }
+        .arch-layer-header {
+            padding: 1rem 1.5rem;
+            background: rgba(14,165,233,0.06);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .arch-layer-header h3 { font-size: 1rem; }
+        .arch-layer-body {
+            padding: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .arch-node {
+            background: rgba(0,0,0,0.25);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.2rem;
+            flex: 1;
+            min-width: 200px;
+        }
+        .arch-node h4 { font-size: 0.9rem; margin-bottom: 0.4rem; color: var(--primary-light); }
+        .arch-node p { font-size: 0.8rem; color: var(--text-muted); }
+        .arch-arrow {
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--primary);
+            padding: 0.5rem 0;
+        }
+
+        /* ===== PRICING ===== */
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        .pricing-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .pricing-card.featured {
+            border-color: var(--primary);
+            background: linear-gradient(180deg, rgba(14,165,233,0.08) 0%, var(--bg-card) 100%);
+            transform: scale(1.04);
+        }
+        .pricing-card:hover { border-color: var(--primary); }
+        .pricing-plan { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .pricing-price { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .pricing-price span { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
+        .pricing-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+        .pricing-features { list-style: none; text-align: left; margin-bottom: 1.5rem; }
+        .pricing-features li { padding: 6px 0; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; }
+        .pricing-features li::before { content: '✓'; color: var(--success); font-weight: 700; width: 18px; text-align: center; }
+        .pricing-btn {
+            display: block; width: 100%; padding: 12px;
+            border-radius: var(--radius-sm); border: none;
+            font-size: 0.9rem; font-weight: 700; cursor: pointer;
+            transition: all 0.3s;
+        }
+        .pricing-btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .pricing-btn-outline:hover { border-color: var(--primary); color: var(--primary-light); }
+        .pricing-btn-primary { background: var(--primary); color: white; }
+        .pricing-btn-primary:hover { background: var(--primary-dark); }
+
+        /* ===== TABLES ===== */
+        .table-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        .table-header-bar {
+            padding: 1rem 1.2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { text-align: left; padding: 10px 14px; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.15); }
+        td { padding: 10px 14px; border-bottom: 1px solid rgba(30,32,53,0.3); }
+        .status-badge { padding: 3px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; }
+        .status-confirmed { background: rgba(16,185,129,0.15); color: var(--success); }
+        .status-pending { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .status-cancelled { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+        /* ===== NOTIFS ===== */
+        .notif-list { display: flex; flex-direction: column; gap: 8px; }
+        .notif-item {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--primary);
+        }
+        .notif-item.notif-whatsapp { border-left-color: #25D366; }
+        .notif-item.notif-email { border-left-color: var(--accent); }
+        .notif-item.notif-push { border-left-color: var(--info); }
+        .notif-icon { font-size: 1.3rem; }
+        .notif-content { flex: 1; }
+        .notif-title { font-size: 0.85rem; font-weight: 600; }
+        .notif-desc { font-size: 0.78rem; color: var(--text-muted); }
+
+        /* ===== DB SCHEMA ===== */
+        .schema-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.2rem; }
+        .schema-table {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        .schema-table-header {
+            padding: 0.8rem 1rem;
+            background: rgba(14,165,233,0.08);
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .schema-table-header span { color: var(--primary-light); font-size: 0.72rem; font-weight: 400; }
+        .schema-field {
+            padding: 6px 1rem;
+            font-size: 0.78rem;
+            border-bottom: 1px solid rgba(30,32,53,0.3);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .schema-field:last-child { border-bottom: none; }
+        .schema-field-name { font-weight: 600; }
+        .schema-field-type { color: var(--primary-light); font-size: 0.72rem; }
+        .schema-field-pk { color: var(--accent); font-size: 0.65rem; font-weight: 700; }
+        .schema-field-fk { color: var(--info); font-size: 0.65rem; font-weight: 700; }
+
+        /* ===== MISC ===== */
+        .divider { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; background: rgba(14,165,233,0.1); color: var(--primary-light); margin: 2px; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem; }
+        .flow-diagram { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; align-items: center; }
+        .flow-node {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 1rem 1.5rem;
+            text-align: center; width: 160px;
+        }
+        .flow-node .flow-icon { font-size: 1.8rem; margin-bottom: 4px; }
+        .flow-node .flow-label { font-size: 0.82rem; font-weight: 600; }
+        .flow-arrow-h { font-size: 1.5rem; color: var(--primary-light); }
+        .highlight-box {
+            background: rgba(14,165,233,0.06);
+            border: 1px solid rgba(14,165,233,0.2);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .highlight-box h3 { font-size: 1rem; color: var(--primary-light); margin-bottom: 0.5rem; }
+        .highlight-box p, .highlight-box li { font-size: 0.85rem; color: var(--text-muted); }
+        .highlight-box ul { list-style: none; }
+        .highlight-box ul li { padding: 3px 0; }
+        .highlight-box ul li::before { content: '→ '; color: var(--primary-light); }
+        .code-block {
+            background: rgba(0,0,0,0.35);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.2rem;
+            font-family: 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.7;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .dashboard-preview { grid-template-columns: 1fr; }
+            .dash-sidebar { display: none; }
+            .pricing-grid { grid-template-columns: 1fr; }
+            .pricing-card.featured { transform: none; }
+            .booking-flow { flex-direction: column; }
+            .flow-step { min-width: auto; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .two-col, .three-col { grid-template-columns: 1fr; }
+            .schema-grid { grid-template-columns: 1fr; }
+            .nav-tabs { display: none; }
+            .nav-mobile { display: block; }
+        }
+        @media (min-width: 901px) {
+            .nav-mobile { display: none; }
+        }
+        .nav-mobile select {
+            background: var(--bg-card); color: var(--text); border: 1px solid var(--border);
+            padding: 6px 12px; border-radius: var(--radius-sm); font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="top-nav">
+    <div class="logo">
+        <span>Dunee</span>
+        <span>001</span>
+    </div>
+    <div class="nav-tabs">
+        <button class="nav-tab active" data-section="visao-geral">Visao Geral</button>
+        <button class="nav-tab" data-section="modulos">Modulos</button>
+        <button class="nav-tab" data-section="dashboard">Dashboard</button>
+        <button class="nav-tab" data-section="agendamento">Agendamento</button>
+        <button class="nav-tab" data-section="banco-dados">Banco de Dados</button>
+        <button class="nav-tab" data-section="arquitetura">Arquitetura</button>
+        <button class="nav-tab" data-section="seguranca">Seguranca & Escala</button>
+        <button class="nav-tab" data-section="monetizacao">Monetizacao</button>
+    </div>
+    <div class="nav-mobile">
+        <select id="nav-mobile-select">
+            <option value="visao-geral">Visao Geral</option>
+            <option value="modulos">Modulos</option>
+            <option value="dashboard">Dashboard</option>
+            <option value="agendamento">Agendamento</option>
+            <option value="banco-dados">Banco de Dados</option>
+            <option value="arquitetura">Arquitetura</option>
+            <option value="seguranca">Seguranca & Escala</option>
+            <option value="monetizacao">Monetizacao</option>
+        </select>
+    </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero-section">
+    <h1>Dunee <span>001</span></h1>
+    <p>Plataforma SaaS B2B para saloes de beleza, barbearias e profissionais autonomos da area de estetica. Gestao completa, agendamento online e escala para milhares de estabelecimentos.</p>
+    <div class="hero-domain">dunee.com.br</div>
+    <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+        <span class="tag">SaaS B2B</span>
+        <span class="tag">Multi-tenant</span>
+        <span class="tag">Agendamento Online</span>
+        <span class="tag">Gestao Financeira</span>
+        <span class="tag">WhatsApp API</span>
+        <span class="tag">Alto Trafego</span>
+        <span class="tag">Supabase + Vercel</span>
+        <span class="tag">Next.js</span>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION: VISAO GERAL -->
+<!-- ============================================================ -->
+<div class="section active" id="visao-geral">
+    <h2 class="section-title">Visao Geral do Produto</h2>
+    <p class="section-subtitle">Dunee transforma a gestao de negocios de beleza — do caderninho ao painel inteligente.</p>
+
+    <div class="two-col" style="margin-bottom:2rem;">
+        <div class="card">
+            <div class="card-icon">&#x1F3AF;</div>
+            <h3>Problema</h3>
+            <ul>
+                <li>Agendamentos por WhatsApp geram conflitos e no-shows</li>
+                <li>Controle financeiro inexistente ou em caderninho</li>
+                <li>Cliente nao sabe horarios disponiveis em tempo real</li>
+                <li>Profissional perde tempo gerenciando ao inves de atender</li>
+                <li>Dono do salao nao tem visao geral do negocio</li>
+                <li>Autonomos nao tem ferramenta profissional acessivel</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#x1F4A1;</div>
+            <h3>Solucao Dunee</h3>
+            <ul>
+                <li>Agendamento online 24/7 com link personalizado</li>
+                <li>Dashboard financeiro com receita, comissoes e despesas</li>
+                <li>Painel admin multi-nivel (dono, gerente, profissional)</li>
+                <li>Lembretes automaticos via WhatsApp</li>
+                <li>Pagina publica de cada estabelecimento em dunee.com.br/slug</li>
+                <li>Plano gratuito para autonomos, escalando para saloes</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ATORES -->
+    <h3 style="margin-bottom:1rem;">Atores do Sistema</h3>
+    <div class="three-col" style="margin-bottom:2rem;">
+        <div class="card" style="text-align:center;">
+            <div class="card-icon">&#x1F464;</div>
+            <h3>Cliente Final</h3>
+            <p>Acessa dunee.com.br/salao, escolhe servico, profissional, data e hora. Recebe confirmacao e lembrete por WhatsApp.</p>
+        </div>
+        <div class="card" style="text-align:center;">
+            <div class="card-icon">&#x2702;&#xFE0F;</div>
+            <h3>Profissional</h3>
+            <p>Gerencia sua agenda, define servicos e precos, acompanha comissoes, configura horarios e folgas.</p>
+        </div>
+        <div class="card" style="text-align:center;">
+            <div class="card-icon">&#x1F3E2;</div>
+            <h3>Empresa (Tenant)</h3>
+            <p>Administra profissionais, comissoes, relatorios, configuracoes do estabelecimento, personaliza pagina publica.</p>
+        </div>
+    </div>
+
+    <!-- FLUXO -->
+    <h3 style="margin-bottom:1rem;">Fluxo Principal</h3>
+    <div class="flow-diagram" style="margin-bottom:2rem;">
+        <div class="flow-node"><div class="flow-icon">&#x1F517;</div><div class="flow-label">Acessa link</div></div>
+        <div class="flow-arrow-h">&#x2192;</div>
+        <div class="flow-node"><div class="flow-icon">&#x2702;&#xFE0F;</div><div class="flow-label">Escolhe servico</div></div>
+        <div class="flow-arrow-h">&#x2192;</div>
+        <div class="flow-node"><div class="flow-icon">&#x1F487;</div><div class="flow-label">Escolhe profissional</div></div>
+        <div class="flow-arrow-h">&#x2192;</div>
+        <div class="flow-node"><div class="flow-icon">&#x1F4C5;</div><div class="flow-label">Data & hora</div></div>
+        <div class="flow-arrow-h">&#x2192;</div>
+        <div class="flow-node"><div class="flow-icon">&#x2705;</div><div class="flow-label">Confirma</div></div>
+        <div class="flow-arrow-h">&#x2192;</div>
+        <div class="flow-node"><div class="flow-icon">&#x1F4F2;</div><div class="flow-label">Lembrete WhatsApp</div></div>
+    </div>
+
+    <!-- DIFERENCIAIS -->
+    <h3 style="margin-bottom:1rem;">Diferenciais Competitivos</h3>
+    <div class="cards-grid">
+        <div class="card">
+            <h3>Multi-tenant Real</h3>
+            <p>Cada empresa tem seus dados 100% isolados no mesmo banco via Row Level Security do PostgreSQL. Escala para milhares de tenants sem custo extra de infraestrutura.</p>
+        </div>
+        <div class="card">
+            <h3>Plano Gratis para Autonomos</h3>
+            <p>Profissional autonomo usa de graca com recursos essenciais. Quando cresce e contrata equipe, faz upgrade naturalmente — funil de aquisicao organico.</p>
+        </div>
+        <div class="card">
+            <h3>Velocidade & Performance</h3>
+            <p>Frontend na Vercel (CDN global, edge functions), banco Supabase com connection pooling. Pagina publica carrega em menos de 1 segundo.</p>
+        </div>
+        <div class="card">
+            <h3>WhatsApp Nativo</h3>
+            <p>Integrado com WhatsApp Business API para confirmacoes, lembretes e remarketing. Reduz no-show em ate 60%.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION: MODULOS -->
+<!-- ============================================================ -->
+<div class="section" id="modulos">
+    <h2 class="section-title">Modulos do Sistema</h2>
+    <p class="section-subtitle">Divididos em fases de lancamento — MVP primeiro, escala depois.</p>
+
+    <h3 style="margin-bottom:1rem;"><span class="badge badge-mvp">MVP</span> Fase 1 — Lancamento</h3>
+    <div class="cards-grid" style="margin-bottom:2rem;">
+        <div class="card">
+            <div class="card-icon">&#x1F4C5;</div>
+            <h3>Agenda & Agendamento</h3>
+            <ul>
+                <li>Visualizacao dia/semana/mes</li>
+                <li>Agendamento online pelo cliente</li>
+                <li>Bloqueio de horarios e folgas</li>
+                <li>Status: confirmado, pendente, cancelado, concluido, no-show</li>
+                <li>Filtro por profissional</li>
+                <li>Duracao automatica por servico</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#x2702;&#xFE0F;</div>
+            <h3>Servicos</h3>
+            <ul>
+                <li>Catalogo com categorias (Cabelo, Barba, Unha, Estetica...)</li>
+                <li>Preco e duracao por servico</li>
+                <li>Ativar/desativar servico</li>
+                <li>Vincular servico a profissional</li>
+                <li>Foto do servico (opcional)</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#x1F465;</div>
+            <h3>Profissionais</h3>
+            <ul>
+                <li>Cadastro com foto, bio e especialidades</li>
+                <li>Horario de trabalho personalizado</li>
+                <li>Comissao configuravel (% ou fixo)</li>
+                <li>Dias de folga e ferias</li>
+                <li>Perfil publico no agendamento</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#x1F464;</div>
+            <h3>Clientes</h3>
+            <ul>
+                <li>Cadastro automatico no primeiro agendamento</li>
+                <li>Historico de visitas e gastos</li>
+                <li>Tags (VIP, Frequente, Novo, Inativo)</li>
+                <li>Observacoes internas</li>
+                <li>Busca e filtros</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#x1F3E0;</div>
+            <h3>Pagina Publica</h3>
+            <ul>
+                <li>dunee.com.br/nome-do-salao</li>
+                <li>Logo, fotos, endereco, horarios</li>
+                <li>Lista de servicos com precos</li>
+                <li>Botao de agendamento</li>
+                <li>Responsiva (mobile-first)</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#x1F512;</div>
+            <h3>Auth & Multi-tenancy</h3>
+            <ul>
+                <li>Login com email/senha (Supabase Auth)</li>
+                <li>Login social (Google) futuro</li>
+                <li>Convite de profissional por email</li>
+                <li>Roles: owner, manager, professional</li>
+                <li>Dados isolados por tenant (RLS)</li>
+            </ul>
+        </div>
+    </div>
+
+    <h3 style="margin-bottom:1rem;"><span class="badge badge-v2">V2</span> Fase 2 — Crescimento</h3>
+    <div class="cards-grid" style="margin-bottom:2rem;">
+        <div class="card">
+            <div class="card-icon">&#x1F4B0;</div>
+            <h3>Financeiro</h3>
+            <ul>
+                <li>Receitas e despesas</li>
+                <li>Comissoes automaticas por profissional</li>
+                <li>Relatorio mensal com graficos</li>
+                <li>Metodos de pagamento (Pix, Cartao, Dinheiro)</li>
+                <li>Exportar PDF/Excel</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#x1F4F2;</div>
+            <h3>Notificacoes</h3>
+            <ul>
+                <li>WhatsApp Business API (confirmacao + lembrete)</li>
+                <li>Email transacional</li>
+                <li>Push notification no painel</li>
+                <li>Lembrete 24h e 1h antes</li>
+                <li>Notificacao de cancelamento</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#x1F4CA;</div>
+            <h3>Dashboard Avancado</h3>
+            <ul>
+                <li>Receita diaria/semanal/mensal</li>
+                <li>Taxa de no-show</li>
+                <li>Ranking de profissionais</li>
+                <li>Horarios de pico</li>
+                <li>Clientes novos vs recorrentes</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#x2699;&#xFE0F;</div>
+            <h3>Configuracoes</h3>
+            <ul>
+                <li>Dados do estabelecimento</li>
+                <li>Horario de funcionamento</li>
+                <li>Intervalo entre agendamentos</li>
+                <li>Politica de cancelamento</li>
+                <li>Personalizacao da pagina publica</li>
+            </ul>
+        </div>
+    </div>
+
+    <h3 style="margin-bottom:1rem;"><span class="badge badge-v3">V3</span> Fase 3 — Escala</h3>
+    <div class="cards-grid">
+        <div class="card">
+            <div class="card-icon">&#x1F4B3;</div>
+            <h3>Pagamento Online</h3>
+            <ul>
+                <li>Pagamento antecipado (Stripe/Pagar.me)</li>
+                <li>Pix automatico</li>
+                <li>Split de pagamento (salao + profissional)</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#x1F4E3;</div>
+            <h3>Marketing</h3>
+            <ul>
+                <li>Campanhas via WhatsApp</li>
+                <li>Cupons de desconto</li>
+                <li>Programa de fidelidade</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#x1F4F1;</div>
+            <h3>App Mobile (PWA)</h3>
+            <ul>
+                <li>Progressive Web App instalavel</li>
+                <li>Notificacoes push nativas</li>
+                <li>Modo offline para agenda</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-icon">&#x1F310;</div>
+            <h3>Multi-unidade</h3>
+            <ul>
+                <li>Rede de saloes sob mesmo dono</li>
+                <li>Dashboard consolidado</li>
+                <li>Transferencia de profissional entre unidades</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION: DASHBOARD -->
+<!-- ============================================================ -->
+<div class="section" id="dashboard">
+    <h2 class="section-title">Dashboard Preview</h2>
+    <p class="section-subtitle">Visao do painel administrativo que cada empresa (tenant) vera ao logar.</p>
+
+    <div class="dashboard-preview">
+        <!-- Sidebar -->
+        <div class="dash-sidebar">
+            <div class="dash-sidebar-brand">
+                <h4>Studio Bella</h4>
+                <p>Maria Bella — Proprietaria</p>
+            </div>
+            <div class="dash-sidebar-item active">&#x1F4CA; Dashboard</div>
+            <div class="dash-sidebar-item">&#x1F4C5; Agenda</div>
+            <div class="dash-sidebar-item">&#x1F464; Clientes</div>
+            <div class="dash-sidebar-item">&#x1F465; Profissionais</div>
+            <div class="dash-sidebar-item">&#x2702;&#xFE0F; Servicos</div>
+            <div class="dash-sidebar-item">&#x1F4B0; Financeiro</div>
+            <div class="dash-sidebar-item">&#x2699;&#xFE0F; Configuracoes</div>
+        </div>
+
+        <!-- Main -->
+        <div class="dash-main">
+            <h3 style="margin-bottom:1rem;">Bem-vinda, Maria!</h3>
+
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-label">Receita Hoje</div>
+                    <div class="stat-value">R$ 1.840</div>
+                    <div class="stat-change up">+12% vs ontem</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Agendamentos</div>
+                    <div class="stat-value">18</div>
+                    <div class="stat-change up">+3 vs ontem</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Taxa No-Show</div>
+                    <div class="stat-value">4.2%</div>
+                    <div class="stat-change up">-1.8% vs mes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Novos Clientes</div>
+                    <div class="stat-value">7</div>
+                    <div class="stat-change up">esta semana</div>
+                </div>
+            </div>
+
+            <!-- Calendar -->
+            <div class="calendar-mock">
+                <div class="cal-header">
+                    <h4>Agenda — Terca, 15 Abril 2026</h4>
+                    <div style="display:flex;gap:6px;">
+                        <span class="tag">Dia</span>
+                        <span class="tag">Semana</span>
+                        <span class="tag">Mes</span>
+                    </div>
+                </div>
+                <div class="cal-grid">
+                    <div class="cal-corner"></div>
+                    <div class="cal-day-header">Ana</div>
+                    <div class="cal-day-header">Carlos</div>
+                    <div class="cal-day-header">Julia</div>
+                    <div class="cal-day-header">Renata</div>
+                    <div class="cal-day-header">Pedro</div>
+
+                    <div class="cal-time">08:00</div>
+                    <div class="cal-slot"><div class="cal-event ev-corte">Corte Fem.</div></div>
+                    <div class="cal-slot"></div>
+                    <div class="cal-slot"><div class="cal-event ev-unha">Manicure</div></div>
+                    <div class="cal-slot"></div>
+                    <div class="cal-slot"><div class="cal-event ev-barba">Barba</div></div>
+
+                    <div class="cal-time">09:00</div>
+                    <div class="cal-slot"><div class="cal-event ev-corte">Corte + Escova</div></div>
+                    <div class="cal-slot"><div class="cal-event ev-barba">Barba + Corte</div></div>
+                    <div class="cal-slot"><div class="cal-event ev-unha">Pedicure</div></div>
+                    <div class="cal-slot"><div class="cal-event ev-sobra">Design Sobra.</div></div>
+                    <div class="cal-slot"></div>
+
+                    <div class="cal-time">10:00</div>
+                    <div class="cal-slot"></div>
+                    <div class="cal-slot"><div class="cal-event ev-barba">Barba</div></div>
+                    <div class="cal-slot"><div class="cal-event ev-unha">Alongamento</div></div>
+                    <div class="cal-slot"><div class="cal-event">Hidratacao</div></div>
+                    <div class="cal-slot"><div class="cal-event ev-corte">Corte Masc.</div></div>
+
+                    <div class="cal-time">11:00</div>
+                    <div class="cal-slot"><div class="cal-event">Progressiva</div></div>
+                    <div class="cal-slot"></div>
+                    <div class="cal-slot"></div>
+                    <div class="cal-slot"><div class="cal-event ev-sobra">Henna</div></div>
+                    <div class="cal-slot"><div class="cal-event ev-barba">Barba</div></div>
+
+                    <div class="cal-time">12:00</div>
+                    <div class="cal-slot" style="color:var(--text-muted);font-size:0.72rem;text-align:center;">ALMOCO</div>
+                    <div class="cal-slot" style="color:var(--text-muted);font-size:0.72rem;text-align:center;">ALMOCO</div>
+                    <div class="cal-slot" style="color:var(--text-muted);font-size:0.72rem;text-align:center;">ALMOCO</div>
+                    <div class="cal-slot" style="color:var(--text-muted);font-size:0.72rem;text-align:center;">ALMOCO</div>
+                    <div class="cal-slot" style="color:var(--text-muted);font-size:0.72rem;text-align:center;">ALMOCO</div>
+
+                    <div class="cal-time">13:00</div>
+                    <div class="cal-slot"><div class="cal-event ev-corte">Corte Masc.</div></div>
+                    <div class="cal-slot"><div class="cal-event ev-barba">Barba Premium</div></div>
+                    <div class="cal-slot"><div class="cal-event ev-unha">Gel</div></div>
+                    <div class="cal-slot"></div>
+                    <div class="cal-slot"><div class="cal-event ev-corte">Degrade</div></div>
+
+                    <div class="cal-time">14:00</div>
+                    <div class="cal-slot"><div class="cal-event">Luzes</div></div>
+                    <div class="cal-slot"><div class="cal-event ev-corte">Corte + Barba</div></div>
+                    <div class="cal-slot"></div>
+                    <div class="cal-slot"><div class="cal-event ev-sobra">Design</div></div>
+                    <div class="cal-slot"><div class="cal-event ev-barba">Barba</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION: AGENDAMENTO -->
+<!-- ============================================================ -->
+<div class="section" id="agendamento">
+    <h2 class="section-title">Fluxo de Agendamento Online</h2>
+    <p class="section-subtitle">O que o cliente final ve ao acessar dunee.com.br/nome-do-salao</p>
+
+    <div class="booking-flow">
+        <!-- Step 1 -->
+        <div class="flow-step">
+            <div class="flow-step-header">
+                <div class="flow-step-num">1</div>
+                <strong>Pagina do Estabelecimento</strong>
+            </div>
+            <div class="flow-step-body">
+                <div style="text-align:center;padding:1.5rem 0;">
+                    <div style="width:60px;height:60px;border-radius:50%;background:rgba(14,165,233,0.15);margin:0 auto 0.8rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">&#x2702;&#xFE0F;</div>
+                    <h4>Studio Bella</h4>
+                    <p style="font-size:0.78rem;color:var(--text-muted);">Rua das Flores, 123 — Centro</p>
+                    <p style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">Seg-Sab 8h as 19h</p>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    <div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:0.85rem;">Corte Feminino</span>
+                        <span style="font-size:0.82rem;color:var(--primary-light);">R$ 80</span>
+                    </div>
+                    <div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:0.85rem;">Barba Completa</span>
+                        <span style="font-size:0.82rem;color:var(--primary-light);">R$ 45</span>
+                    </div>
+                    <div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:0.85rem;">Manicure + Pedicure</span>
+                        <span style="font-size:0.82rem;color:var(--primary-light);">R$ 65</span>
+                    </div>
+                    <div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:0.85rem;">Progressiva</span>
+                        <span style="font-size:0.82rem;color:var(--primary-light);">R$ 180</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flow-step">
+            <div class="flow-step-header">
+                <div class="flow-step-num">2</div>
+                <strong>Escolher Profissional</strong>
+            </div>
+            <div class="flow-step-body">
+                <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem;">Servico: Corte Feminino — R$ 80</p>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <div style="padding:12px;background:rgba(14,165,233,0.08);border:1px solid var(--primary);border-radius:10px;display:flex;align-items:center;gap:12px;">
+                        <div style="width:40px;height:40px;border-radius:50%;background:rgba(14,165,233,0.2);display:flex;align-items:center;justify-content:center;">A</div>
+                        <div><div style="font-size:0.88rem;font-weight:600;">Ana Silva</div><div style="font-size:0.72rem;color:var(--text-muted);">4.9 &#x2605; — 230 atendimentos</div></div>
+                    </div>
+                    <div style="padding:12px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;gap:12px;">
+                        <div style="width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">J</div>
+                        <div><div style="font-size:0.88rem;font-weight:600;">Julia Costa</div><div style="font-size:0.72rem;color:var(--text-muted);">4.8 &#x2605; — 185 atendimentos</div></div>
+                    </div>
+                    <div style="padding:12px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;gap:12px;">
+                        <div style="width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">R</div>
+                        <div><div style="font-size:0.88rem;font-weight:600;">Renata Lima</div><div style="font-size:0.72rem;color:var(--text-muted);">4.7 &#x2605; — 142 atendimentos</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flow-step">
+            <div class="flow-step-header">
+                <div class="flow-step-num">3</div>
+                <strong>Data & Horario</strong>
+            </div>
+            <div class="flow-step-body">
+                <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem;">Ana Silva — Corte Feminino</p>
+                <div style="display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;">
+                    <div style="padding:8px 12px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;text-align:center;font-size:0.78rem;min-width:55px;"><div style="font-size:0.65rem;color:var(--text-muted);">TER</div><strong>15</strong></div>
+                    <div style="padding:8px 12px;background:rgba(14,165,233,0.1);border:1px solid var(--primary);border-radius:8px;text-align:center;font-size:0.78rem;min-width:55px;"><div style="font-size:0.65rem;color:var(--text-muted);">QUA</div><strong>16</strong></div>
+                    <div style="padding:8px 12px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;text-align:center;font-size:0.78rem;min-width:55px;"><div style="font-size:0.65rem;color:var(--text-muted);">QUI</div><strong>17</strong></div>
+                    <div style="padding:8px 12px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;text-align:center;font-size:0.78rem;min-width:55px;"><div style="font-size:0.65rem;color:var(--text-muted);">SEX</div><strong>18</strong></div>
+                    <div style="padding:8px 12px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;text-align:center;font-size:0.78rem;min-width:55px;"><div style="font-size:0.65rem;color:var(--text-muted);">SAB</div><strong>19</strong></div>
+                </div>
+                <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem;">Horarios disponiveis:</p>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <div style="padding:6px 14px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:6px;font-size:0.78rem;">08:00</div>
+                    <div style="padding:6px 14px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:6px;font-size:0.78rem;">09:30</div>
+                    <div style="padding:6px 14px;background:rgba(14,165,233,0.1);border:1px solid var(--primary);border-radius:6px;font-size:0.78rem;color:var(--primary-light);">10:00</div>
+                    <div style="padding:6px 14px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:6px;font-size:0.78rem;">14:00</div>
+                    <div style="padding:6px 14px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:6px;font-size:0.78rem;">15:30</div>
+                    <div style="padding:6px 14px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:6px;font-size:0.78rem;">17:00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="flow-step">
+            <div class="flow-step-header">
+                <div class="flow-step-num">4</div>
+                <strong>Confirmacao</strong>
+            </div>
+            <div class="flow-step-body">
+                <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:1.5rem;text-align:center;margin-bottom:1rem;">
+                    <div style="font-size:2rem;margin-bottom:0.5rem;">&#x2705;</div>
+                    <h4>Agendamento Confirmado!</h4>
+                    <p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.5rem;">Voce recebera um lembrete por WhatsApp</p>
+                </div>
+                <div style="font-size:0.82rem;">
+                    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span style="color:var(--text-muted);">Servico</span><span>Corte Feminino</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span style="color:var(--text-muted);">Profissional</span><span>Ana Silva</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span style="color:var(--text-muted);">Data</span><span>16/04/2026 as 10:00</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span style="color:var(--text-muted);">Duracao</span><span>45 min</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:6px 0;"><span style="color:var(--text-muted);">Valor</span><span style="font-weight:700;color:var(--primary-light);">R$ 80,00</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificacoes -->
+    <hr class="divider">
+    <h3 style="margin-bottom:1rem;">Notificacoes Automaticas</h3>
+    <div class="two-col">
+        <div class="notif-list">
+            <div class="notif-item notif-whatsapp">
+                <div class="notif-icon">&#x1F4AC;</div>
+                <div class="notif-content">
+                    <div class="notif-title">Confirmacao — WhatsApp</div>
+                    <div class="notif-desc">"Oi Camila! Seu agendamento no Studio Bella foi confirmado: Corte Feminino com Ana, dia 16/04 as 10h. Para cancelar, responda CANCELAR."</div>
+                </div>
+            </div>
+            <div class="notif-item notif-whatsapp">
+                <div class="notif-icon">&#x23F0;</div>
+                <div class="notif-content">
+                    <div class="notif-title">Lembrete 24h — WhatsApp</div>
+                    <div class="notif-desc">"Lembrete: amanha voce tem Corte Feminino com Ana as 10h no Studio Bella. Endereco: Rua das Flores, 123. Ate la!"</div>
+                </div>
+            </div>
+        </div>
+        <div class="notif-list">
+            <div class="notif-item notif-email">
+                <div class="notif-icon">&#x1F4E7;</div>
+                <div class="notif-content">
+                    <div class="notif-title">Confirmacao — Email</div>
+                    <div class="notif-desc">Email com detalhes completos + link para cancelar/reagendar + adicionar ao Google Calendar.</div>
+                </div>
+            </div>
+            <div class="notif-item notif-push">
+                <div class="notif-icon">&#x1F514;</div>
+                <div class="notif-content">
+                    <div class="notif-title">Alerta no Painel — Profissional</div>
+                    <div class="notif-desc">"Novo agendamento: Camila Santos — Corte Feminino, 16/04 as 10h" aparece no painel da Ana.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION: BANCO DE DADOS -->
+<!-- ============================================================ -->
+<div class="section" id="banco-dados">
+    <h2 class="section-title">Banco de Dados — PostgreSQL (Supabase)</h2>
+    <p class="section-subtitle">Schema relacional com Row Level Security para isolamento multi-tenant.</p>
+
+    <div class="highlight-box" style="margin-bottom:2rem;">
+        <h3>Estrategia Multi-tenant</h3>
+        <p>Todos os tenants compartilham o mesmo banco (shared database). O isolamento e feito via coluna <code>tenant_id</code> em todas as tabelas + Row Level Security (RLS) do PostgreSQL. Isso garante que um tenant NUNCA acesse dados de outro, mesmo com bug no codigo.</p>
+    </div>
+
+    <div class="schema-grid">
+        <!-- tenants -->
+        <div class="schema-table">
+            <div class="schema-table-header">tenants <span>Estabelecimentos</span></div>
+            <div class="schema-field"><span><span class="schema-field-pk">PK</span> <span class="schema-field-name">id</span></span><span class="schema-field-type">uuid</span></div>
+            <div class="schema-field"><span class="schema-field-name">name</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">slug</span><span class="schema-field-type">text unique</span></div>
+            <div class="schema-field"><span class="schema-field-name">phone</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">address</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">logo_url</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">working_hours</span><span class="schema-field-type">jsonb</span></div>
+            <div class="schema-field"><span class="schema-field-name">settings</span><span class="schema-field-type">jsonb</span></div>
+            <div class="schema-field"><span class="schema-field-name">plan</span><span class="schema-field-type">enum(free,pro,business)</span></div>
+            <div class="schema-field"><span class="schema-field-name">created_at</span><span class="schema-field-type">timestamptz</span></div>
+        </div>
+
+        <!-- users -->
+        <div class="schema-table">
+            <div class="schema-table-header">users <span>Usuarios do sistema</span></div>
+            <div class="schema-field"><span><span class="schema-field-pk">PK</span> <span class="schema-field-name">id</span></span><span class="schema-field-type">uuid (auth.users)</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">tenant_id</span></span><span class="schema-field-type">uuid → tenants</span></div>
+            <div class="schema-field"><span class="schema-field-name">email</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">name</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">role</span><span class="schema-field-type">enum(owner,manager,professional)</span></div>
+            <div class="schema-field"><span class="schema-field-name">avatar_url</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">active</span><span class="schema-field-type">boolean</span></div>
+        </div>
+
+        <!-- professionals -->
+        <div class="schema-table">
+            <div class="schema-table-header">professionals <span>Profissionais</span></div>
+            <div class="schema-field"><span><span class="schema-field-pk">PK</span> <span class="schema-field-name">id</span></span><span class="schema-field-type">uuid</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">tenant_id</span></span><span class="schema-field-type">uuid → tenants</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">user_id</span></span><span class="schema-field-type">uuid → users</span></div>
+            <div class="schema-field"><span class="schema-field-name">name</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">bio</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">commission_pct</span><span class="schema-field-type">numeric</span></div>
+            <div class="schema-field"><span class="schema-field-name">work_schedule</span><span class="schema-field-type">jsonb</span></div>
+            <div class="schema-field"><span class="schema-field-name">rating</span><span class="schema-field-type">numeric</span></div>
+            <div class="schema-field"><span class="schema-field-name">active</span><span class="schema-field-type">boolean</span></div>
+        </div>
+
+        <!-- services -->
+        <div class="schema-table">
+            <div class="schema-table-header">services <span>Catalogo de servicos</span></div>
+            <div class="schema-field"><span><span class="schema-field-pk">PK</span> <span class="schema-field-name">id</span></span><span class="schema-field-type">uuid</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">tenant_id</span></span><span class="schema-field-type">uuid → tenants</span></div>
+            <div class="schema-field"><span class="schema-field-name">name</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">category</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">duration_min</span><span class="schema-field-type">integer</span></div>
+            <div class="schema-field"><span class="schema-field-name">price</span><span class="schema-field-type">numeric</span></div>
+            <div class="schema-field"><span class="schema-field-name">active</span><span class="schema-field-type">boolean</span></div>
+        </div>
+
+        <!-- professional_services -->
+        <div class="schema-table">
+            <div class="schema-table-header">professional_services <span>N:N</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">professional_id</span></span><span class="schema-field-type">uuid → professionals</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">service_id</span></span><span class="schema-field-type">uuid → services</span></div>
+            <div class="schema-field"><span class="schema-field-name">custom_price</span><span class="schema-field-type">numeric (nullable)</span></div>
+            <div class="schema-field"><span class="schema-field-name">custom_duration</span><span class="schema-field-type">integer (nullable)</span></div>
+        </div>
+
+        <!-- clients -->
+        <div class="schema-table">
+            <div class="schema-table-header">clients <span>Clientes do estabelecimento</span></div>
+            <div class="schema-field"><span><span class="schema-field-pk">PK</span> <span class="schema-field-name">id</span></span><span class="schema-field-type">uuid</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">tenant_id</span></span><span class="schema-field-type">uuid → tenants</span></div>
+            <div class="schema-field"><span class="schema-field-name">name</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">phone</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">email</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">tags</span><span class="schema-field-type">text[]</span></div>
+            <div class="schema-field"><span class="schema-field-name">notes</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">total_visits</span><span class="schema-field-type">integer</span></div>
+            <div class="schema-field"><span class="schema-field-name">total_spent</span><span class="schema-field-type">numeric</span></div>
+            <div class="schema-field"><span class="schema-field-name">created_at</span><span class="schema-field-type">timestamptz</span></div>
+        </div>
+
+        <!-- appointments -->
+        <div class="schema-table">
+            <div class="schema-table-header">appointments <span>Agendamentos</span></div>
+            <div class="schema-field"><span><span class="schema-field-pk">PK</span> <span class="schema-field-name">id</span></span><span class="schema-field-type">uuid</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">tenant_id</span></span><span class="schema-field-type">uuid → tenants</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">client_id</span></span><span class="schema-field-type">uuid → clients</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">professional_id</span></span><span class="schema-field-type">uuid → professionals</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">service_id</span></span><span class="schema-field-type">uuid → services</span></div>
+            <div class="schema-field"><span class="schema-field-name">date</span><span class="schema-field-type">date</span></div>
+            <div class="schema-field"><span class="schema-field-name">start_time</span><span class="schema-field-type">time</span></div>
+            <div class="schema-field"><span class="schema-field-name">end_time</span><span class="schema-field-type">time</span></div>
+            <div class="schema-field"><span class="schema-field-name">price</span><span class="schema-field-type">numeric</span></div>
+            <div class="schema-field"><span class="schema-field-name">status</span><span class="schema-field-type">enum(pending,confirmed,completed,cancelled,noshow)</span></div>
+            <div class="schema-field"><span class="schema-field-name">notes</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">created_at</span><span class="schema-field-type">timestamptz</span></div>
+        </div>
+
+        <!-- transactions -->
+        <div class="schema-table">
+            <div class="schema-table-header">transactions <span>Financeiro</span></div>
+            <div class="schema-field"><span><span class="schema-field-pk">PK</span> <span class="schema-field-name">id</span></span><span class="schema-field-type">uuid</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">tenant_id</span></span><span class="schema-field-type">uuid → tenants</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">appointment_id</span></span><span class="schema-field-type">uuid → appointments</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">professional_id</span></span><span class="schema-field-type">uuid → professionals</span></div>
+            <div class="schema-field"><span class="schema-field-name">type</span><span class="schema-field-type">enum(income,expense,commission)</span></div>
+            <div class="schema-field"><span class="schema-field-name">amount</span><span class="schema-field-type">numeric</span></div>
+            <div class="schema-field"><span class="schema-field-name">payment_method</span><span class="schema-field-type">enum(pix,card,cash)</span></div>
+            <div class="schema-field"><span class="schema-field-name">description</span><span class="schema-field-type">text</span></div>
+            <div class="schema-field"><span class="schema-field-name">date</span><span class="schema-field-type">date</span></div>
+        </div>
+
+        <!-- blocked_times -->
+        <div class="schema-table">
+            <div class="schema-table-header">blocked_times <span>Bloqueios de horario</span></div>
+            <div class="schema-field"><span><span class="schema-field-pk">PK</span> <span class="schema-field-name">id</span></span><span class="schema-field-type">uuid</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">tenant_id</span></span><span class="schema-field-type">uuid → tenants</span></div>
+            <div class="schema-field"><span><span class="schema-field-fk">FK</span> <span class="schema-field-name">professional_id</span></span><span class="schema-field-type">uuid → professionals</span></div>
+            <div class="schema-field"><span class="schema-field-name">date</span><span class="schema-field-type">date</span></div>
+            <div class="schema-field"><span class="schema-field-name">start_time</span><span class="schema-field-type">time</span></div>
+            <div class="schema-field"><span class="schema-field-name">end_time</span><span class="schema-field-type">time</span></div>
+            <div class="schema-field"><span class="schema-field-name">reason</span><span class="schema-field-type">text</span></div>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Indices -->
+    <h3 style="margin-bottom:1rem;">Indices Criticos para Performance</h3>
+    <div class="code-block">-- Busca de agendamentos por profissional e data (query mais frequente)
+CREATE INDEX idx_appointments_tenant_prof_date
+  ON appointments (tenant_id, professional_id, date);
+
+-- Busca de horarios disponiveis (pagina publica)
+CREATE INDEX idx_appointments_tenant_date_status
+  ON appointments (tenant_id, date, status)
+  WHERE status NOT IN ('cancelled');
+
+-- Slug da pagina publica (unico por tenant)
+CREATE UNIQUE INDEX idx_tenants_slug ON tenants (slug);
+
+-- Busca de clientes por telefone (dedup)
+CREATE INDEX idx_clients_tenant_phone
+  ON clients (tenant_id, phone);
+
+-- Transacoes por periodo (relatorios financeiros)
+CREATE INDEX idx_transactions_tenant_date
+  ON transactions (tenant_id, date DESC);
+
+-- Bloqueios de horario ativos
+CREATE INDEX idx_blocked_times_tenant_prof_date
+  ON blocked_times (tenant_id, professional_id, date);</div>
+
+    <hr class="divider">
+
+    <!-- RLS -->
+    <h3 style="margin-bottom:1rem;">Row Level Security (RLS)</h3>
+    <div class="code-block">-- Exemplo: policy para appointments
+ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Tenant isolation" ON appointments
+  USING (tenant_id = (
+    SELECT tenant_id FROM users
+    WHERE id = auth.uid()
+  ));
+
+-- Pagina publica: permitir leitura anonima filtrada
+CREATE POLICY "Public read by slug" ON services
+  FOR SELECT USING (
+    active = true
+    AND tenant_id IN (
+      SELECT id FROM tenants WHERE slug = current_setting('app.current_slug')
+    )
+  );</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION: ARQUITETURA -->
+<!-- ============================================================ -->
+<div class="section" id="arquitetura">
+    <h2 class="section-title">Arquitetura Tecnica</h2>
+    <p class="section-subtitle">Stack desenhada para escala, performance e custo controlado.</p>
+
+    <!-- Stack -->
+    <div class="highlight-box" style="margin-bottom:2rem;">
+        <h3>Tech Stack Definitiva</h3>
+        <div class="two-col" style="margin-top:1rem;">
+            <ul>
+                <li><strong>Frontend:</strong> Next.js 16 + React 19 + TypeScript</li>
+                <li><strong>Styling:</strong> Tailwind CSS 4</li>
+                <li><strong>Deploy Frontend:</strong> Vercel (CDN global + Edge)</li>
+                <li><strong>Dominio:</strong> dunee.com.br (Registro.br → Vercel DNS)</li>
+            </ul>
+            <ul>
+                <li><strong>Banco de Dados:</strong> Supabase (PostgreSQL managed)</li>
+                <li><strong>Auth:</strong> Supabase Auth (email + Google)</li>
+                <li><strong>Storage:</strong> Supabase Storage (logos, fotos)</li>
+                <li><strong>Realtime:</strong> Supabase Realtime (notifs no painel)</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Camadas -->
+    <div class="arch-layer">
+        <div class="arch-layer-header">
+            <span style="font-size:1.3rem;">&#x1F310;</span>
+            <h3>Camada 1 — Cliente (Browser/Mobile)</h3>
+        </div>
+        <div class="arch-layer-body">
+            <div class="arch-node">
+                <h4>Pagina Publica</h4>
+                <p>dunee.com.br/[slug] — SSG/ISR no Next.js. Cacheada na CDN da Vercel. Carrega em &lt;1s. Sem auth necessario.</p>
+            </div>
+            <div class="arch-node">
+                <h4>Painel Admin</h4>
+                <p>dunee.com.br/admin — SPA com auth obrigatorio. CSR com prefetch de dados. Sidebar + rotas protegidas.</p>
+            </div>
+            <div class="arch-node">
+                <h4>PWA (Futuro)</h4>
+                <p>Service Worker para cache offline da agenda. Push notifications via Web Push API. Instalavel no celular.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="arch-arrow">&#x2B07;&#xFE0F;</div>
+
+    <div class="arch-layer">
+        <div class="arch-layer-header">
+            <span style="font-size:1.3rem;">&#x2699;&#xFE0F;</span>
+            <h3>Camada 2 — API & Logica (Edge/Serverless)</h3>
+        </div>
+        <div class="arch-layer-body">
+            <div class="arch-node">
+                <h4>Next.js API Routes</h4>
+                <p>Rotas em /api/* para logica de negocio. Validacao, calculo de disponibilidade, comissoes. Roda como serverless na Vercel.</p>
+            </div>
+            <div class="arch-node">
+                <h4>Supabase Edge Functions</h4>
+                <p>Webhooks, envio de WhatsApp, processamento async. Deno runtime, cold start rapido. Cron jobs para lembretes.</p>
+            </div>
+            <div class="arch-node">
+                <h4>Middleware Next.js</h4>
+                <p>Auth check no edge (antes de chegar no servidor). Redireciona /admin para /login se nao autenticado. Resolve tenant pelo slug.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="arch-arrow">&#x2B07;&#xFE0F;</div>
+
+    <div class="arch-layer">
+        <div class="arch-layer-header">
+            <span style="font-size:1.3rem;">&#x1F5C4;&#xFE0F;</span>
+            <h3>Camada 3 — Dados & Servicos</h3>
+        </div>
+        <div class="arch-layer-body">
+            <div class="arch-node">
+                <h4>Supabase PostgreSQL</h4>
+                <p>Banco relacional managed. Connection pooling via PgBouncer. RLS para multi-tenancy. Backups automaticos.</p>
+            </div>
+            <div class="arch-node">
+                <h4>Supabase Auth</h4>
+                <p>JWT tokens, refresh automatico. Row Level Security integrado. Magic link + email/senha. Google OAuth futuro.</p>
+            </div>
+            <div class="arch-node">
+                <h4>Supabase Storage</h4>
+                <p>Logos, fotos de profissionais, imagens de servicos. Buckets isolados por tenant. CDN integrada.</p>
+            </div>
+            <div class="arch-node">
+                <h4>Supabase Realtime</h4>
+                <p>WebSocket para notificacoes no painel admin. Novo agendamento aparece instantaneamente. Broadcast por tenant.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="arch-arrow">&#x2B07;&#xFE0F;</div>
+
+    <div class="arch-layer">
+        <div class="arch-layer-header">
+            <span style="font-size:1.3rem;">&#x1F517;</span>
+            <h3>Camada 4 — Integracoes Externas</h3>
+        </div>
+        <div class="arch-layer-body">
+            <div class="arch-node">
+                <h4>WhatsApp Business API</h4>
+                <p>Confirmacoes e lembretes automaticos. Template messages aprovadas. Via Z-API ou Evolution API (custo menor).</p>
+            </div>
+            <div class="arch-node">
+                <h4>Resend (Email)</h4>
+                <p>Email transacional para confirmacoes e recuperacao de senha. Templates HTML. Dominio proprio dunee.com.br.</p>
+            </div>
+            <div class="arch-node">
+                <h4>Stripe / Pagar.me (V3)</h4>
+                <p>Pagamento online e cobranca de assinatura dos planos. Split payment entre plataforma e tenant.</p>
+            </div>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Estrutura de pastas -->
+    <h3 style="margin-bottom:1rem;">Estrutura do Projeto Next.js</h3>
+    <div class="code-block">dunee001/
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx                    # Root layout (fontes, providers)
+│   │   ├── page.tsx                      # Landing page dunee.com.br
+│   │   ├── [slug]/                       # Pagina publica do estabelecimento
+│   │   │   ├── page.tsx                  # SSG/ISR — servicos, info, agendamento
+│   │   │   └── agendar/page.tsx          # Fluxo de agendamento
+│   │   ├── admin/                        # Painel admin (protegido)
+│   │   │   ├── layout.tsx                # Sidebar + auth guard
+│   │   │   ├── page.tsx                  # Dashboard
+│   │   │   ├── agenda/page.tsx
+│   │   │   ├── clientes/page.tsx
+│   │   │   ├── profissionais/page.tsx
+│   │   │   ├── servicos/page.tsx
+│   │   │   ├── financeiro/page.tsx
+│   │   │   └── configuracoes/page.tsx
+│   │   ├── auth/
+│   │   │   ├── login/page.tsx
+│   │   │   ├── register/page.tsx
+│   │   │   └── callback/route.ts         # Supabase auth callback
+│   │   └── api/
+│   │       ├── appointments/route.ts     # CRUD agendamentos
+│   │       ├── availability/route.ts     # Calculo de disponibilidade
+│   │       └── webhooks/
+│   │           └── whatsapp/route.ts     # Webhook WhatsApp
+│   ├── components/
+│   │   ├── ui/                           # Componentes base (Button, Input, Modal...)
+│   │   ├── admin/                        # Componentes do painel
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── StatsCard.tsx
+│   │   │   └── Calendar.tsx
+│   │   └── booking/                      # Componentes do agendamento publico
+│   │       ├── ServiceList.tsx
+│   │       ├── ProfessionalPicker.tsx
+│   │       ├── DateTimePicker.tsx
+│   │       └── BookingConfirmation.tsx
+│   ├── lib/
+│   │   ├── supabase/
+│   │   │   ├── client.ts                # Supabase browser client
+│   │   │   ├── server.ts                # Supabase server client
+│   │   │   └── admin.ts                 # Supabase admin (service role)
+│   │   ├── utils.ts                     # Helpers (cn, formatCurrency, etc.)
+│   │   └── constants.ts                 # Enums, categorias, config
+│   ├── hooks/
+│   │   ├── useAuth.ts
+│   │   ├── useTenant.ts
+│   │   └── useAppointments.ts
+│   └── types/
+│       └── database.ts                  # Types gerados do Supabase
+├── supabase/
+│   ├── migrations/                      # SQL migrations versionadas
+│   │   ├── 001_create_tenants.sql
+│   │   ├── 002_create_users.sql
+│   │   ├── 003_create_professionals.sql
+│   │   ├── 004_create_services.sql
+│   │   ├── 005_create_clients.sql
+│   │   ├── 006_create_appointments.sql
+│   │   ├── 007_create_transactions.sql
+│   │   ├── 008_create_blocked_times.sql
+│   │   ├── 009_create_rls_policies.sql
+│   │   └── 010_create_indexes.sql
+│   └── seed.sql                         # Dados de teste
+├── public/                              # Assets estaticos
+├── .env.local                           # SUPABASE_URL, SUPABASE_ANON_KEY
+├── package.json
+├── tsconfig.json
+├── next.config.ts
+├── tailwind.config.ts
+└── CLAUDE.md</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION: SEGURANCA & ESCALA -->
+<!-- ============================================================ -->
+<div class="section" id="seguranca">
+    <h2 class="section-title">Seguranca & Escala para Alto Trafego</h2>
+    <p class="section-subtitle">Preparado para crescer de 10 para 10.000 tenants sem re-arquitetar.</p>
+
+    <div class="two-col" style="margin-bottom:2rem;">
+        <div>
+            <h3 style="margin-bottom:1rem;">Seguranca</h3>
+            <div class="cards-grid" style="grid-template-columns:1fr;">
+                <div class="card">
+                    <h3>Multi-tenant com RLS</h3>
+                    <p>Row Level Security no PostgreSQL garante isolamento a nivel de banco. Mesmo com bug no codigo, tenant A nao acessa dados do tenant B. Cada query filtra automaticamente por tenant_id.</p>
+                </div>
+                <div class="card">
+                    <h3>Auth com JWT</h3>
+                    <p>Supabase Auth gera JWT com claims do tenant. Validacao no Edge Middleware do Next.js (antes de chegar no servidor). Refresh token automatico. CSRF protection built-in.</p>
+                </div>
+                <div class="card">
+                    <h3>Rate Limiting</h3>
+                    <p>Vercel WAF para DDoS protection. Rate limit na API de agendamento (evita bot spam). Captcha no formulario publico (hCaptcha). IP blocking por abuso.</p>
+                </div>
+                <div class="card">
+                    <h3>Dados Sensiveis</h3>
+                    <p>Env vars no Vercel (nunca no codigo). Supabase service role key so no server-side. Dados de pagamento nunca tocam nosso banco (Stripe/Pagar.me tokeniza).</p>
+                </div>
+            </div>
+        </div>
+        <div>
+            <h3 style="margin-bottom:1rem;">Escala & Performance</h3>
+            <div class="cards-grid" style="grid-template-columns:1fr;">
+                <div class="card">
+                    <h3>CDN Global (Vercel Edge)</h3>
+                    <p>Paginas publicas servidas do edge mais proximo. ISR (Incremental Static Regeneration) para revalidar a cada 60s sem rebuild. Latencia &lt;100ms no Brasil.</p>
+                </div>
+                <div class="card">
+                    <h3>Connection Pooling</h3>
+                    <p>PgBouncer no Supabase gerencia pool de conexoes. Suporta milhares de requests simultaneos sem esgotar conexoes do PostgreSQL. Transaction mode para serverless.</p>
+                </div>
+                <div class="card">
+                    <h3>Serverless Auto-scale</h3>
+                    <p>API Routes na Vercel escalam de 0 a milhares de instancias automaticamente. Paga por uso. Sem servidor para gerenciar. Cold start &lt;200ms.</p>
+                </div>
+                <div class="card">
+                    <h3>Cache Strategy</h3>
+                    <p>Pagina publica: CDN cache 60s. Dados do painel: SWR (stale-while-revalidate). Calculo de disponibilidade: cache 30s no edge. Busca de slug: cache indefinido ate mudanca.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Projecao de carga -->
+    <h3 style="margin-bottom:1rem;">Projecao de Carga</h3>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Metrica</th>
+                    <th>10 Tenants</th>
+                    <th>100 Tenants</th>
+                    <th>1.000 Tenants</th>
+                    <th>10.000 Tenants</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Agendamentos/dia</td>
+                    <td>~150</td>
+                    <td>~1.500</td>
+                    <td>~15.000</td>
+                    <td>~150.000</td>
+                </tr>
+                <tr>
+                    <td>Requests API/dia</td>
+                    <td>~2.000</td>
+                    <td>~20.000</td>
+                    <td>~200.000</td>
+                    <td>~2.000.000</td>
+                </tr>
+                <tr>
+                    <td>Paginas publicas/dia</td>
+                    <td>~500</td>
+                    <td>~5.000</td>
+                    <td>~50.000</td>
+                    <td>~500.000</td>
+                </tr>
+                <tr>
+                    <td>Tamanho do banco</td>
+                    <td>~50 MB</td>
+                    <td>~500 MB (free tier)</td>
+                    <td>~5 GB (Pro)</td>
+                    <td>~50 GB (Pro)</td>
+                </tr>
+                <tr>
+                    <td>Custo infra estimado</td>
+                    <td>R$ 0 (free)</td>
+                    <td>~R$ 130/mes</td>
+                    <td>~R$ 500/mes</td>
+                    <td>~R$ 2.500/mes</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <hr class="divider">
+
+    <!-- DNS -->
+    <h3 style="margin-bottom:1rem;">Configuracao do Dominio</h3>
+    <div class="code-block">-- Registro.br → apontar nameservers para Vercel:
+-- ns1.vercel-dns.com
+-- ns2.vercel-dns.com
+
+-- OU manter Registro.br e adicionar:
+-- Tipo A    → 76.76.21.21
+-- Tipo CNAME  www → cname.vercel-dns.com
+
+-- No Vercel Dashboard:
+-- Settings → Domains → Add "dunee.com.br"
+-- SSL automatico (Let's Encrypt)
+
+-- Supabase custom domain (Pro plan):
+-- api.dunee.com.br → CNAME para seu projeto Supabase</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION: MONETIZACAO -->
+<!-- ============================================================ -->
+<div class="section" id="monetizacao">
+    <h2 class="section-title">Monetizacao</h2>
+    <p class="section-subtitle">Modelo freemium com upsell natural conforme o negocio cresce.</p>
+
+    <div class="pricing-grid" style="margin-bottom:2rem;">
+        <!-- Free -->
+        <div class="pricing-card">
+            <div class="pricing-plan">Autonomo</div>
+            <div class="pricing-price">Gratis</div>
+            <div class="pricing-desc">Para profissionais que trabalham sozinhos</div>
+            <ul class="pricing-features">
+                <li>1 profissional</li>
+                <li>Agendamento online ilimitado</li>
+                <li>Pagina publica dunee.com.br/slug</li>
+                <li>Ate 50 clientes</li>
+                <li>Gestao de servicos</li>
+                <li>Lembretes por email</li>
+            </ul>
+            <button class="pricing-btn pricing-btn-outline">Comecar Gratis</button>
+        </div>
+
+        <!-- Pro -->
+        <div class="pricing-card featured">
+            <div class="pricing-plan">Profissional</div>
+            <div class="pricing-price">R$ 79<span>/mes</span></div>
+            <div class="pricing-desc">Para saloes e barbearias com equipe</div>
+            <ul class="pricing-features">
+                <li>Ate 10 profissionais</li>
+                <li>Clientes ilimitados</li>
+                <li>Lembretes WhatsApp</li>
+                <li>Dashboard financeiro</li>
+                <li>Relatorios PDF/Excel</li>
+                <li>Comissoes automaticas</li>
+                <li>Suporte prioritario</li>
+            </ul>
+            <button class="pricing-btn pricing-btn-primary">Mais Popular</button>
+        </div>
+
+        <!-- Business -->
+        <div class="pricing-card">
+            <div class="pricing-plan">Business</div>
+            <div class="pricing-price">R$ 199<span>/mes</span></div>
+            <div class="pricing-desc">Para redes e grandes estabelecimentos</div>
+            <ul class="pricing-features">
+                <li>Profissionais ilimitados</li>
+                <li>Multi-unidade</li>
+                <li>Pagamento online integrado</li>
+                <li>API personalizada</li>
+                <li>Dominio proprio</li>
+                <li>Marketing (cupons, fidelidade)</li>
+                <li>Gerente de conta dedicado</li>
+            </ul>
+            <button class="pricing-btn pricing-btn-outline">Falar com Vendas</button>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Projecao receita -->
+    <h3 style="margin-bottom:1rem;">Projecao de Receita</h3>
+    <div class="table-wrap" style="margin-bottom:2rem;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Cenario</th>
+                    <th>Free</th>
+                    <th>Pro (R$79)</th>
+                    <th>Business (R$199)</th>
+                    <th>MRR</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Mes 3</td>
+                    <td>80 tenants</td>
+                    <td>15 tenants</td>
+                    <td>2 tenants</td>
+                    <td style="font-weight:700;color:var(--success);">R$ 1.583</td>
+                </tr>
+                <tr>
+                    <td>Mes 6</td>
+                    <td>300 tenants</td>
+                    <td>50 tenants</td>
+                    <td>8 tenants</td>
+                    <td style="font-weight:700;color:var(--success);">R$ 5.542</td>
+                </tr>
+                <tr>
+                    <td>Mes 12</td>
+                    <td>1.000 tenants</td>
+                    <td>180 tenants</td>
+                    <td>25 tenants</td>
+                    <td style="font-weight:700;color:var(--success);">R$ 19.195</td>
+                </tr>
+                <tr>
+                    <td>Mes 24</td>
+                    <td>3.000 tenants</td>
+                    <td>500 tenants</td>
+                    <td>80 tenants</td>
+                    <td style="font-weight:700;color:var(--success);">R$ 55.420</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Estrategia -->
+    <h3 style="margin-bottom:1rem;">Estrategia de Conversao</h3>
+    <div class="cards-grid">
+        <div class="card">
+            <h3>Free → Pro</h3>
+            <ul>
+                <li>Limite de 50 clientes incentiva upgrade ao crescer</li>
+                <li>WhatsApp so no Pro (maior redutor de no-show)</li>
+                <li>Trial de 14 dias do Pro para novos cadastros</li>
+                <li>Dashboard financeiro bloqueado no free</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h3>Pro → Business</h3>
+            <ul>
+                <li>Multi-unidade so no Business</li>
+                <li>Pagamento online com split (receita recorrente extra)</li>
+                <li>Dominio proprio para branding do salao</li>
+                <li>Contato proativo quando tenant atinge 8+ profissionais</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h3>Receita Adicional</h3>
+            <ul>
+                <li>Taxa sobre pagamento online (2-3% alem do gateway)</li>
+                <li>WhatsApp Marketing (campanhas pagas por envio)</li>
+                <li>Marketplace de produtos de beleza (futuro)</li>
+                <li>Selo "Verificado Dunee" para SEO local</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCRIPT -->
+<!-- ============================================================ -->
+<script>
+    // Tab navigation
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.section).classList.add('active');
+        });
+    });
+
+    // Mobile nav
+    const mobileSelect = document.getElementById('nav-mobile-select');
+    if (mobileSelect) {
+        mobileSelect.addEventListener('change', (e) => {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(e.target.value).classList.add('active');
+            // Sync desktop tabs
+            document.querySelectorAll('.nav-tab').forEach(t => {
+                if (t.dataset.section === e.target.value) t.classList.add('active');
+            });
+        });
+    }
+</script>
+
+</body>
+</html>
