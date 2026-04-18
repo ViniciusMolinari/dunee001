@@ -125,10 +125,55 @@
             display: inline-block; padding: 2px 10px; border-radius: 99px;
             font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
         }
+        .badge-foundation { background: rgba(168,85,247,0.18); color: #C084FC; }
         .badge-mvp { background: rgba(16,185,129,0.15); color: var(--success); }
         .badge-v2 { background: rgba(59,130,246,0.15); color: var(--info); }
         .badge-v3 { background: rgba(245,158,11,0.15); color: var(--warning); }
         .badge-future { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+        /* ===== STRATEGY / PHASES ===== */
+        .phase-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.2rem;
+            position: relative;
+        }
+        .phase-block.phase-foundation { border-left: 4px solid #A855F7; }
+        .phase-block.phase-mvp { border-left: 4px solid var(--success); }
+        .phase-block.phase-later { border-left: 4px solid var(--text-muted); opacity: 0.88; }
+        .phase-head { display: flex; align-items: center; gap: 12px; margin-bottom: 0.8rem; flex-wrap: wrap; }
+        .phase-head h3 { font-size: 1.15rem; }
+        .phase-head .phase-tag { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .phase-desc { color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1rem; }
+        .phase-tracks { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+        .track {
+            background: rgba(0,0,0,0.25);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.2rem;
+        }
+        .track h4 { font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        .track ul { list-style: none; }
+        .track ul li { padding: 4px 0; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: flex-start; gap: 8px; }
+        .track ul li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--primary-light); margin-top: 8px; flex-shrink: 0; }
+        .phase-timeline {
+            display: flex; gap: 12px; margin: 1rem 0 2rem; flex-wrap: wrap;
+        }
+        .timeline-pill {
+            padding: 10px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 99px;
+            font-size: 0.82rem; font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .timeline-pill .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .timeline-pill.t-foundation .dot { background: #A855F7; }
+        .timeline-pill.t-mvp .dot { background: var(--success); }
+        .timeline-pill.t-later .dot { background: var(--text-muted); }
+        .timeline-arrow { color: var(--text-muted); font-size: 1.2rem; align-self: center; }
 
         /* ===== DASHBOARD PREVIEW ===== */
         .dashboard-preview {
@@ -485,6 +530,7 @@
     </div>
     <div class="nav-tabs">
         <button class="nav-tab active" data-section="visao-geral">Visao Geral</button>
+        <button class="nav-tab" data-section="estrategia">Estrategia de Lancamento</button>
         <button class="nav-tab" data-section="modulos">Modulos</button>
         <button class="nav-tab" data-section="dashboard">Dashboard</button>
         <button class="nav-tab" data-section="agendamento">Agendamento</button>
@@ -496,6 +542,7 @@
     <div class="nav-mobile">
         <select id="nav-mobile-select">
             <option value="visao-geral">Visao Geral</option>
+            <option value="estrategia">Estrategia de Lancamento</option>
             <option value="modulos">Modulos</option>
             <option value="dashboard">Dashboard</option>
             <option value="agendamento">Agendamento</option>
@@ -510,7 +557,7 @@
 <!-- HERO -->
 <div class="hero-section">
     <h1>Dunee <span>001</span></h1>
-    <p>Plataforma SaaS B2B para saloes de beleza, barbearias e profissionais autonomos da area de estetica. Gestao completa, agendamento online e escala para milhares de estabelecimentos.</p>
+    <p>Plataforma SaaS B2B para saloes de beleza, barbearias e profissionais autonomos da area de estetica. <strong>Lancamento enxuto:</strong> arquitetura profissional + identidade visual + agendamento multi-tenant. Demais modulos chegam em fases posteriores.</p>
     <div class="hero-domain">dunee.com.br</div>
     <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
         <span class="tag">SaaS B2B</span>
@@ -617,13 +664,179 @@
 </div>
 
 <!-- ============================================================ -->
+<!-- SECTION: ESTRATEGIA DE LANCAMENTO -->
+<!-- ============================================================ -->
+<div class="section" id="estrategia">
+    <h2 class="section-title">Estrategia de Lancamento</h2>
+    <p class="section-subtitle">Divisao clara entre o que vai ao ar no lancamento (MVP enxuto) e o que vem depois. Foco total: entregar agendamento multi-tenant funcionando, rapido e bonito.</p>
+
+    <!-- Timeline visual -->
+    <div class="phase-timeline">
+        <div class="timeline-pill t-foundation"><span class="dot"></span> Fase 0 — Foundation</div>
+        <span class="timeline-arrow">&#x2192;</span>
+        <div class="timeline-pill t-mvp"><span class="dot"></span> Fase 1 — MVP Lancamento (Agendamento Multi-tenant)</div>
+        <span class="timeline-arrow">&#x2192;</span>
+        <div class="timeline-pill t-later"><span class="dot"></span> Fases Posteriores (pos-lancamento)</div>
+    </div>
+
+    <!-- FASE 0 -->
+    <div class="phase-block phase-foundation">
+        <div class="phase-head">
+            <span class="badge badge-foundation">Fase 0</span>
+            <h3>Foundation — Arquitetura Profissional + Identidade Visual</h3>
+            <span class="phase-tag">Pre-requisito do lancamento · Duas trilhas em paralelo</span>
+        </div>
+        <p class="phase-desc">Construir a base tecnica profissional de um SaaS escalavel e, em paralelo, definir a identidade visual do front-end. Sem essa fase nao ha MVP solido.</p>
+        <div class="phase-tracks">
+            <div class="track">
+                <h4>&#x1F3D7;&#xFE0F; Trilha 0A — Arquitetura SaaS</h4>
+                <ul>
+                    <li>Init Next.js 16 + TypeScript strict + Tailwind 4</li>
+                    <li>ESLint + Prettier + Husky + lint-staged</li>
+                    <li>Pre-commit com validate-rules.sh (CLAUDE.md)</li>
+                    <li>Estrutura src/app, components, lib, hooks, types</li>
+                    <li>Supabase: clients (browser/server/admin) + migrations</li>
+                    <li>Utilities base: logger, money, utils, api/auth</li>
+                    <li>Hooks base: useRealtimeSubscription, useAuth, useTenant</li>
+                    <li>Zod schemas em src/lib/validations</li>
+                    <li>CI GitHub Actions (typecheck + lint + test)</li>
+                    <li>.claude/rules/ (code-reuse, architecture)</li>
+                </ul>
+            </div>
+            <div class="track">
+                <h4>&#x1F3A8; Trilha 0B — Identidade Visual / Design System</h4>
+                <ul>
+                    <li>Paleta de cores e tokens (Tailwind config)</li>
+                    <li>Tipografia e escala de spacing</li>
+                    <li>Logo Dunee (definitivo)</li>
+                    <li>Componentes base em src/components/ui/</li>
+                    <li>Button, Input, Select, Modal, Card, Badge, Toast</li>
+                    <li>Tema responsivo mobile-first</li>
+                    <li>Guia visual (cores, typo, componentes)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- FASE 1 -->
+    <div class="phase-block phase-mvp">
+        <div class="phase-head">
+            <span class="badge badge-mvp">Fase 1</span>
+            <h3>MVP Lancamento — Apenas Agendamento Multi-tenant</h3>
+            <span class="phase-tag">Go-live do SaaS</span>
+        </div>
+        <p class="phase-desc">O app no lancamento <strong>SO</strong> faz agendamento, com isolamento multi-tenant. Dois frontes: (1) pagina publica por tenant estilo landing-page com agendamento inline e (2) dashboard + painel de agenda para a empresa/autonomo. Tudo mais (financeiro, notificacoes, pagamento online, marketing) fica para fases posteriores.</p>
+        <div class="phase-tracks">
+            <div class="track">
+                <h4>&#x1F465; Cliente Final — Pagina Publica</h4>
+                <ul>
+                    <li>URL: dunee.com.br/[slug-do-salao]</li>
+                    <li>Landing-page estilo single-page</li>
+                    <li>Hero + servicos + profissionais + contato</li>
+                    <li>Agendamento INLINE na mesma pagina</li>
+                    <li>Fluxo: servico → profissional → data/hora → dados → confirmacao</li>
+                    <li>Sem necessidade de cadastro/login</li>
+                    <li>SSG/ISR — carrega em &lt;1s</li>
+                </ul>
+            </div>
+            <div class="track">
+                <h4>&#x1F4BC; Empresa / Autonomo — Painel Admin</h4>
+                <ul>
+                    <li>URL: dunee.com.br/admin (protegido)</li>
+                    <li>Dashboard inicial (stats do dia)</li>
+                    <li>Agenda dia/semana + filtro por profissional</li>
+                    <li>CRUD de Servicos</li>
+                    <li>CRUD de Profissionais</li>
+                    <li>CRUD de Clientes (cadastro auto no booking)</li>
+                    <li>Configuracoes minimas (dados, horario, slug)</li>
+                </ul>
+            </div>
+            <div class="track">
+                <h4>&#x1F512; Base Multi-tenant</h4>
+                <ul>
+                    <li>Supabase Auth (email/senha)</li>
+                    <li>Tabelas: tenants, users, user_tenants</li>
+                    <li>RLS: isolamento total por tenant_id</li>
+                    <li>Roles: owner, manager, professional</li>
+                    <li>Middleware Next.js: resolve tenant pelo slug</li>
+                    <li>Rate limiting na API publica de booking</li>
+                </ul>
+            </div>
+            <div class="track">
+                <h4>&#x2705; Checklist de Go-Live</h4>
+                <ul>
+                    <li>Testes E2E do fluxo de agendamento (Playwright)</li>
+                    <li>Audit log + logger em todo catch server-side</li>
+                    <li>Deploy staging → producao</li>
+                    <li>DNS dunee.com.br → Vercel</li>
+                    <li>Onboarding dos primeiros tenants reais</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- FASES POSTERIORES -->
+    <div class="phase-block phase-later">
+        <div class="phase-head">
+            <span class="badge badge-v2">Fase 2</span>
+            <h3>Crescimento — apos o lancamento</h3>
+            <span class="phase-tag">Pos-lancamento</span>
+        </div>
+        <p class="phase-desc">Depois que o agendamento multi-tenant estiver rodando em producao com tenants reais, iniciamos as features de crescimento.</p>
+        <div class="phase-tracks">
+            <div class="track">
+                <h4>Features Fase 2</h4>
+                <ul>
+                    <li>Financeiro (receitas, despesas, comissoes)</li>
+                    <li>Notificacoes (WhatsApp Business + Email Resend)</li>
+                    <li>Dashboard avancado (metricas, ranking, no-show)</li>
+                    <li>Configuracoes completas + personalizacao da pagina publica</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="phase-block phase-later">
+        <div class="phase-head">
+            <span class="badge badge-v3">Fase 3</span>
+            <h3>Escala — quando houver volume</h3>
+            <span class="phase-tag">Pos-lancamento · Monetizacao avancada</span>
+        </div>
+        <p class="phase-desc">Features que so fazem sentido com base de tenants grande e recorrencia estabelecida.</p>
+        <div class="phase-tracks">
+            <div class="track">
+                <h4>Features Fase 3</h4>
+                <ul>
+                    <li>Pagamento online (Stripe / Pagar.me + Pix + split)</li>
+                    <li>Marketing (campanhas WhatsApp, cupons, fidelidade)</li>
+                    <li>App Mobile (PWA instalavel + push nativo)</li>
+                    <li>Multi-unidade (rede de saloes)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumo estrategico -->
+    <div class="highlight-box" style="margin-top:2rem;">
+        <h3>Principios da Estrategia</h3>
+        <ul style="margin-top:0.8rem;">
+            <li><strong>Lancar com escopo minimo e encantador:</strong> agendamento multi-tenant que funciona bem vale mais que 10 modulos meia-boca.</li>
+            <li><strong>Arquitetura profissional desde o dia 1:</strong> Supabase + RLS + Next.js + CI + pre-commit. Sem gambiarra que precisa re-arquitetar depois.</li>
+            <li><strong>Identidade visual como parte da Fase 0:</strong> o front precisa ser bonito no lancamento — nao e detalhe de polish.</li>
+            <li><strong>Features futuras ja desenhadas no schema:</strong> banco ja contempla transacoes, notificacoes e assinaturas mesmo que a UI so venha em V2/V3.</li>
+            <li><strong>Pos-lancamento guia o roadmap:</strong> priorizar V2 baseado em feedback de tenants reais, nao em suposicao.</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ============================================================ -->
 <!-- SECTION: MODULOS -->
 <!-- ============================================================ -->
 <div class="section" id="modulos">
     <h2 class="section-title">Modulos do Sistema</h2>
-    <p class="section-subtitle">Divididos em fases de lancamento — MVP primeiro, escala depois.</p>
+    <p class="section-subtitle">Detalhamento funcional dos modulos. Ver aba <strong>Estrategia de Lancamento</strong> para a divisao em fases.</p>
 
-    <h3 style="margin-bottom:1rem;"><span class="badge badge-mvp">MVP</span> Fase 1 — Lancamento</h3>
+    <h3 style="margin-bottom:1rem;"><span class="badge badge-mvp">MVP</span> Fase 1 — Lancamento (Agendamento Multi-tenant)</h3>
     <div class="cards-grid" style="margin-bottom:2rem;">
         <div class="card">
             <div class="card-icon">&#x1F4C5;</div>
@@ -672,13 +885,14 @@
         </div>
         <div class="card">
             <div class="card-icon">&#x1F3E0;</div>
-            <h3>Pagina Publica</h3>
+            <h3>Pagina Publica (LP + Agendamento)</h3>
             <ul>
-                <li>dunee.com.br/nome-do-salao</li>
-                <li>Logo, fotos, endereco, horarios</li>
-                <li>Lista de servicos com precos</li>
-                <li>Botao de agendamento</li>
-                <li>Responsiva (mobile-first)</li>
+                <li>dunee.com.br/[slug-do-salao]</li>
+                <li>Landing-page single-page com hero, servicos e info</li>
+                <li>Agendamento INLINE na mesma pagina (sem navegacao)</li>
+                <li>Fluxo: servico → profissional → data/hora → dados</li>
+                <li>Sem cadastro/login para o cliente final</li>
+                <li>SSG/ISR — carrega em &lt;1s, mobile-first</li>
             </ul>
         </div>
         <div class="card">

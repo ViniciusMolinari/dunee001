@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# =============================================================================
+# pre-commit hook — Dunee 001
+# Ativar uma única vez neste clone com:
+#   git config core.hooksPath .githooks
+# -----------------------------------------------------------------------------
+# Delegação: todo o trabalho está em scripts/validate-rules.sh (versionado).
+# =============================================================================
+set -euo pipefail
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+VALIDATOR="$REPO_ROOT/scripts/validate-rules.sh"
+
+if [ ! -x "$VALIDATOR" ]; then
+  echo "⚠  $VALIDATOR não está executável. Rode: chmod +x $VALIDATOR"
+  exit 1
+fi
+
+exec "$VALIDATOR"

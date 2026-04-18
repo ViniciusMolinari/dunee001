@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dunee — Gerador de Prompts para Claude Code</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface-2: #232735;
+    --surface-3: #2c3042;
+    --border: #363b4e;
+    --border-focus: #6c8aff;
+    --text: #e4e6f0;
+    --text-muted: #8b90a5;
+    --text-dim: #5c6178;
+    --accent: #6c8aff;
+    --accent-bg: rgba(108, 138, 255, 0.1);
+    --green: #8AC926;
+    --green-bg: rgba(138, 201, 38, 0.1);
+    --orange: #f59e0b;
+    --orange-bg: rgba(245, 158, 11, 0.1);
+    --red: #ef4444;
+    --red-bg: rgba(239, 68, 68, 0.08);
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.3);
+    --font: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+  }
+  .header h1 span { color: var(--accent); }
+  .header p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+  .card-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .num {
+    background: var(--accent);
+    color: var(--bg);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  /* Form */
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  textarea, select {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 0.15s;
+  }
+  textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(108, 138, 255, 0.12);
+  }
+  textarea::placeholder { color: var(--text-dim); }
+  .textarea-sm { min-height: 80px; }
+  .textarea-md { min-height: 120px; }
+
+  /* Task type selector */
+  .type-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 500px) {
+    .type-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .type-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 8px;
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .type-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+  .type-btn.active {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* Chips (regras) */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .chip:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+  .chip.active {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Switches */
+  .switches {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+  }
+  .switch-row span {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+  .toggle {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    background: var(--surface-3);
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+    border: none;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(18px); }
+
+  /* Output */
+  .output-area {
+    position: sticky;
+    top: 24px;
+  }
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .output-header .card-title { margin-bottom: 0; }
+  .copy-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 18px;
+    font-family: var(--font);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .copy-btn:hover { filter: brightness(1.15); }
+  .copy-btn.copied {
+    background: var(--green);
+  }
+  .prompt-output {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    min-height: 400px;
+  }
+  .prompt-output .section-label {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .prompt-output .rule-text {
+    color: var(--orange);
+  }
+
+  /* Stats bar */
+  .stats {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    padding: 8px 12px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+  .stats strong { color: var(--text-muted); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  /* Tips */
+  .tips {
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--orange-bg);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: var(--radius-sm);
+  }
+  .tips h3 {
+    font-size: 0.82rem;
+    color: var(--orange);
+    margin-bottom: 8px;
+  }
+  .tips ul {
+    list-style: none;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .tips ul li {
+    padding: 3px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+  .tips ul li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--orange);
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1><span>Dunee</span> — Gerador de Prompts para Claude Code</h1>
+    <p>Preencha os campos e copie o prompt otimizado para máxima aderência às regras do projeto</p>
+  </div>
+
+  <div class="layout">
+    <!-- LEFT: Form -->
+    <div>
+      <!-- Tipo de tarefa -->
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-title"><span class="num">1</span> Tipo de Tarefa</div>
+        <div class="type-grid">
+          <button class="type-btn active" data-type="feature" onclick="setType(this)">Nova Feature</button>
+          <button class="type-btn" data-type="bugfix" onclick="setType(this)">Correção de Bug</button>
+          <button class="type-btn" data-type="refactor" onclick="setType(this)">Refatoração</button>
+          <button class="type-btn" data-type="component" onclick="setType(this)">Componente</button>
+          <button class="type-btn" data-type="api" onclick="setType(this)">API Route</button>
+          <button class="type-btn" data-type="page" onclick="setType(this)">Página</button>
+        </div>
+      </div>
+
+      <!-- Tarefa -->
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-title"><span class="num">2</span> Descrição da Tarefa</div>
+        <div class="field">
+          <label>O que precisa ser feito?</label>
+          <textarea id="task" class="textarea-md" placeholder="Descreva a funcionalidade, correção ou modificação necessária...&#10;&#10;Seja específico: o que deve acontecer, onde, para quem." oninput="generate()"></textarea>
+        </div>
+        <div class="field">
+          <label>Contexto adicional (opcional)</label>
+          <textarea id="context" class="textarea-sm" placeholder="Onde isso se encaixa no projeto? O que já existe?&#10;Ex: 'Na página de clientes já existe uma listagem, preciso adicionar filtros.'" oninput="generate()"></textarea>
+        </div>
+      </div>
+
+      <!-- Regras -->
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-title"><span class="num">3</span> Regras Relevantes</div>
+        <label style="margin-bottom: 10px;">Clique nas regras que se aplicam a esta tarefa:</label>
+        <div class="chips">
+          <button class="chip active" data-rule="reuse" onclick="toggleChip(this)">Reutilização</button>
+          <button class="chip" data-rule="cache" onclick="toggleChip(this)">Cache SWR</button>
+          <button class="chip" data-rule="firestore" onclick="toggleChip(this)">Firestore</button>
+          <button class="chip" data-rule="image" onclick="toggleChip(this)">next/image</button>
+          <button class="chip" data-rule="auth" onclick="toggleChip(this)">Auth/Admin</button>
+          <button class="chip" data-rule="api" onclick="toggleChip(this)">API Routes</button>
+          <button class="chip" data-rule="multitenancy" onclick="toggleChip(this)">Multi-Tenancy</button>
+          <button class="chip" data-rule="colors" onclick="toggleChip(this)">Cores/Verde</button>
+          <button class="chip" data-rule="monitoring" onclick="toggleChip(this)">Monitoramento</button>
+          <button class="chip" data-rule="security" onclick="toggleChip(this)">Segurança</button>
+          <button class="chip" data-rule="libraries" onclick="toggleChip(this)">Bibliotecas</button>
+          <button class="chip" data-rule="saas" onclick="toggleChip(this)">Padrões SaaS</button>
+          <button class="chip" data-rule="docs" onclick="toggleChip(this)">Documentação</button>
+          <button class="chip" data-rule="a11y" onclick="toggleChip(this)">Acessibilidade</button>
+        </div>
+      </div>
+
+      <!-- Opções -->
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-title"><span class="num">4</span> Opções</div>
+        <div class="switches">
+          <div class="switch-row">
+            <span>Exigir plano antes de codar</span>
+            <button class="toggle on" id="opt-plan" onclick="toggleSwitch(this)"></button>
+          </div>
+          <div class="switch-row">
+            <span>Forçar exploração do projeto</span>
+            <button class="toggle on" id="opt-explore" onclick="toggleSwitch(this)"></button>
+          </div>
+          <div class="switch-row">
+            <span>Checklist de verificação pós-código</span>
+            <button class="toggle on" id="opt-checklist" onclick="toggleSwitch(this)"></button>
+          </div>
+          <div class="switch-row">
+            <span>Limitar escopo (pedir só análise primeiro)</span>
+            <button class="toggle" id="opt-analysis" onclick="toggleSwitch(this)"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dicas -->
+      <div class="tips">
+        <h3>Dicas de Uso</h3>
+        <ul>
+          <li>Abra uma <strong>nova conversa</strong> no Claude Code para cada tarefa</li>
+          <li>Para tarefas grandes, marque "Limitar escopo" e peça apenas o plano primeiro</li>
+          <li>Quanto mais regras marcar, mais longo o prompt — marque só as relevantes</li>
+          <li>Após receber o código, peça verificação contra os checklists do CLAUDE.md</li>
+          <li>Se a conversa ficou longa, abra uma nova e continue do ponto em que parou</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- RIGHT: Output -->
+    <div class="output-area">
+      <div class="card">
+        <div class="output-header">
+          <div class="card-title" style="margin-bottom: 0;"><span class="num">→</span> Prompt Gerado</div>
+          <button class="copy-btn" onclick="copyPrompt()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copiar
+          </button>
+        </div>
+        <div class="prompt-output" id="output"></div>
+        <div class="stats" id="stats"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const RULES = {
+  reuse: {
+    label: 'Reutilização',
+    text: `- ANTES de criar qualquer componente, hook ou utility: pesquisar em src/lib/, src/hooks/, src/components/domain/, src/components/ui/ se já existe algo similar
+- NUNCA duplicar código. Estender ou parametrizar o existente
+- Regra da 2ª ocorrência: se algo similar já existe, extrair para utility antes de reutilizar
+- Consultar .claude/rules/code-reuse.md para lista completa de componentes existentes`
+  },
+  cache: {
+    label: 'Cache SWR',
+    text: `- NUNCA mostrar spinner/skeleton para dados já vistos pelo usuário
+- Usar createSWRCache de @/lib/cache/swr-cache
+- TTLs: Perfil 60min, Acesso/Listas 30min, Billing 15min, Status 24h
+- Dados em tempo real: não cachear`
+  },
+  firestore: {
+    label: 'Firestore',
+    text: `- NUNCA passar undefined em documentos Firestore
+- Queries com 2+ .where() ou .where() + .orderBy() em campos diferentes: SEMPRE adicionar índice em firestore.indexes.json
+- Usar timestampToDate() de @/lib/firestore/serialization (nunca instanceof Timestamp inline)
+- Consultar .claude/rules/firestore-indexes.md`
+  },
+  image: {
+    label: 'Imagens',
+    text: `- SEMPRE usar next/image (nunca <img> ou <LazyImage> para imagens externas)
+- Propriedades obrigatórias: src, alt, width+height (ou fill), placeholder="blur", blurDataURL
+- Domínios externos em next.config.js → remotePatterns`
+  },
+  auth: {
+    label: 'Auth/Admin',
+    text: `- Usar requireAuth, requireAdmin, requireAccess de @/lib/api/auth (NUNCA criar isAdmin() local)
+- Usar useAuth de @/contexts/AuthContext
+- Usar useAdminCheck de @/hooks/useAdminCheck
+- Auth org-scoped: requireOrgAuth de @/lib/api/org-auth`
+  },
+  api: {
+    label: 'API Routes',
+    text: `- Auth: requireAuth/requireAdmin/requireAccess de @/lib/api/auth
+- Erros: handleApiError de @/lib/errors (NUNCA catch manual)
+- Validação: Zod schemas em src/lib/validations/ (NUNCA validar manualmente)
+- Logger: logger.captureException(error, { route, module }) em todo catch server-side
+- Limite: 150 linhas por API route
+- Consultar .claude/rules/api-routes.md`
+  },
+  multitenancy: {
+    label: 'Multi-Tenancy',
+    text: `- Dados financeiros: orgId como campo em users/{uid}/ (NUNCA mover para organizations/)
+- Docs operacionais: organizations/{orgId}/documents/{collection}/items/
+- Auth: requireOrgAuth de @/lib/api/org-auth
+- Payments: SEMPRE incluir orgId via resolveOrgId
+- useDocumentStorage: SEMPRE passar orgId: currentOrg?.id`
+  },
+  colors: {
+    label: 'Cores',
+    text: `- Verde (#8AC926) é EXCLUSIVO para: botões CTA primários, sidebar accent ativo e badge OneMobb
+- NUNCA usar verde em backgrounds, bordas, títulos, checkmarks, ícones de status, barras de progresso
+- Destaque principal: --highlight-primary (azul)
+- Dica Pro/importante: --highlight-accent (laranja)
+- Alerta/erro: --color-script-danger (vermelho)`
+  },
+  monitoring: {
+    label: 'Monitoramento',
+    text: `- logger.captureException(error, { route, module }) em TODO catch server-side
+- NUNCA console.error sozinho, NUNCA catch vazio
+- Alertar: 500, webhooks, crons, pagamentos, auth, serviços externos
+- NÃO alertar: 400/401/403/404/429`
+  },
+  security: {
+    label: 'Segurança',
+    text: `- NUNCA hardcodar chaves. Usar process.env.* e Secret Manager/Vercel
+- NUNCA logar valores de chaves/tokens
+- NUNCA || 'fallback-secret'. Throw em produção se não configurado
+- Validar inputs no servidor com Zod
+- Consultar .claude/rules/security.md`
+  },
+  libraries: {
+    label: 'Bibliotecas',
+    text: `- NUNCA reimplementar o que tem biblioteca obrigatória
+- IDs: generateId() de @/lib/utils (nanoid), não Math.random()
+- CPF/CNPJ: cpf-cnpj-validator via @/lib/validators/payment
+- Datas: date-fns (não getTime() + ms)
+- Moeda: formatMoney() de @/lib/money (não .toFixed().replace())
+- CSV: Papa.parse() de papaparse
+- Consultar .claude/rules/robust-libraries.md para lista completa`
+  },
+  saas: {
+    label: 'Padrões SaaS',
+    text: `- Testes: cobertura 80%, Vitest + Testing Library + Playwright
+- Onboarding: EmptyState + tooltip primeira vez
+- LGPD: minimização + opt-in + data export
+- Soft Delete: NUNCA deletar permanente, usar deletedAt + filtrar queries
+- Acessibilidade: aria-label, focus visível, contraste 4.5:1`
+  },
+  docs: {
+    label: 'Documentação',
+    text: `- JSDoc em hooks, services, API routes, interfaces 3+ campos
+- Atualizar: ARQUITETURA.md, SCHEMA_FIRESTORE.md, API_REFERENCE.md
+- Atualizar Central de Ajuda se modificar funcionalidade do usuário
+- Consultar .claude/rules/documentation.md`
+  },
+  a11y: {
+    label: 'Acessibilidade',
+    text: `- aria-label em elementos interativos
+- Focus visível (outline) em todos os elementos focáveis
+- Contraste mínimo 4.5:1
+- Navegação por teclado funcional`
+  }
+};
+
+const TYPE_CONTEXT = {
+  feature: {
+    label: 'Nova Feature',
+    extra: `- Componentes: máx 200 linhas, extrair sub-componentes em _components/ se necessário
+- Hooks: extrair quando houver 3+ useState, fetch/cache ou useEffect
+- Services: extrair API calls e lógica de negócio para [noun].service.ts
+- Types: definir em [noun].types.ts`
+  },
+  bugfix: {
+    label: 'Correção de Bug',
+    extra: `- Identificar a causa raiz antes de propor correção
+- Verificar se o bug existe em outros pontos do código (mesmo pattern)
+- Não introduzir workarounds — aplicar a correção profissional`
+  },
+  refactor: {
+    label: 'Refatoração',
+    extra: `- Manter comportamento idêntico (sem mudanças funcionais)
+- Verificar que testes existentes continuam passando
+- Seguir limites de linhas: page.tsx 300, componente 200, hook/service 250, API 150`
+  },
+  component: {
+    label: 'Componente',
+    extra: `- Máximo 200 linhas. Se exceder, extrair sub-componentes
+- Componentes internos: _components/. Compartilhados: components/domain/[feature]/
+- Estilos: usar Tailwind + variáveis CSS do projeto
+- Props tipadas com interface (não type inline)`
+  },
+  api: {
+    label: 'API Route',
+    extra: `- Máximo 150 linhas
+- Auth: requireAuth/requireAdmin de @/lib/api/auth
+- Validação: Zod schema em src/lib/validations/
+- Erros: handleApiError de @/lib/errors
+- Monitoramento: logger.captureException em todo catch`
+  },
+  page: {
+    label: 'Página',
+    extra: `- Máximo 300 linhas para page.tsx
+- Extrair componentes para _components/ dentro da rota
+- Extrair lógica para hooks custom use[PageName]
+- Lógica de negócio em services, não na página`
+  }
+};
+
+let currentType = 'feature';
+
+function setType(btn) {
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentType = btn.dataset.type;
+  generate();
+}
+
+function toggleChip(chip) {
+  chip.classList.toggle('active');
+  generate();
+}
+
+function toggleSwitch(btn) {
+  btn.classList.toggle('on');
+  generate();
+}
+
+function getActiveRules() {
+  return Array.from(document.querySelectorAll('.chip.active')).map(c => c.dataset.rule);
+}
+
+function isOn(id) {
+  return document.getElementById(id).classList.contains('on');
+}
+
+function generate() {
+  const task = document.getElementById('task').value.trim();
+  const context = document.getElementById('context').value.trim();
+  const activeRules = getActiveRules();
+  const wantPlan = isOn('opt-plan');
+  const wantExplore = isOn('opt-explore');
+  const wantChecklist = isOn('opt-checklist');
+  const wantAnalysis = isOn('opt-analysis');
+
+  let prompt = '';
+
+  // Task type
+  const typeInfo = TYPE_CONTEXT[currentType];
+
+  if (wantAnalysis) {
+    prompt += `## Modo: Apenas Análise e Planejamento\n`;
+    prompt += `NÃO implemente nada ainda. Apenas analise e me entregue o plano.\n\n`;
+  }
+
+  // Task
+  prompt += `## Tarefa (${typeInfo.label})\n`;
+  if (task) {
+    prompt += `${task}\n`;
+  } else {
+    prompt += `[Descreva sua tarefa aqui]\n`;
+  }
+  prompt += `\n`;
+
+  // Context
+  if (context) {
+    prompt += `## Contexto\n${context}\n\n`;
+  }
+
+  // Pre-code requirements
+  if (wantPlan || wantExplore) {
+    prompt += `## ANTES de escrever qualquer código (obrigatório)\n`;
+    prompt += `1. Leia o CLAUDE.md do projeto\n`;
+    if (wantExplore) {
+      prompt += `2. Explore a estrutura de pastas e arquivos relevantes para esta tarefa\n`;
+      prompt += `3. Liste todos os componentes, hooks e utils EXISTENTES que serão reutilizados\n`;
+      prompt += `4. Leia as regras detalhadas em .claude/rules/ relevantes para esta tarefa\n`;
+    }
+    if (wantPlan) {
+      prompt += `${wantExplore ? '5' : '2'}. Me apresente o plano completo e AGUARDE minha aprovação antes de implementar\n`;
+    }
+    prompt += `\n`;
+  }
+
+  // Type-specific rules
+  prompt += `## Regras de Arquitetura (${typeInfo.label})\n`;
+  prompt += `${typeInfo.extra}\n\n`;
+
+  // Selected rules
+  if (activeRules.length > 0) {
+    prompt += `## Regras Específicas para Esta Tarefa\n`;
+    for (const ruleKey of activeRules) {
+      const rule = RULES[ruleKey];
+      prompt += `\n### ${rule.label}\n${rule.text}\n`;
+    }
+    prompt += `\n`;
+  }
+
+  // Anti-patterns reminder
+  prompt += `## Lembrete: Anti-Patterns Proibidos\n`;
+  prompt += `- NUNCA duplicar código que já existe no projeto\n`;
+  prompt += `- NUNCA criar utils/hooks/componentes sem verificar se já existem\n`;
+  prompt += `- NUNCA ultrapassar limites de linhas (page: 300, componente: 200, hook/service: 250, API: 150)\n`;
+  prompt += `- NUNCA usar workarounds quando existe solução profissional\n`;
+  prompt += `- NUNCA deduzir a estrutura — ler os arquivos antes de modificar\n`;
+  prompt += `- Se tiver dúvida sobre qualquer decisão, ME PERGUNTE antes de implementar\n`;
+  prompt += `\n`;
+
+  // Post-code checklist
+  if (wantChecklist && !wantAnalysis) {
+    prompt += `## Após implementar (obrigatório)\n`;
+    prompt += `Verifique o código contra os checklists do CLAUDE.md:\n`;
+    prompt += `- [ ] Nenhum arquivo excede limite de linhas\n`;
+    prompt += `- [ ] Lógica de negócios separada da UI\n`;
+    prompt += `- [ ] Nenhum código duplica funcionalidade existente\n`;
+    prompt += `- [ ] Anti-patterns de .claude/rules/code-reuse.md verificados\n`;
+    prompt += `- [ ] Hooks extraídos para lógica complexa\n`;
+    prompt += `- [ ] Novo reutilizável documentado no CLAUDE.md\n`;
+    prompt += `- [ ] Testes, validação Zod, audit log (se aplicável)\n`;
+    prompt += `- [ ] Logger com contexto em todo catch server-side\n`;
+    prompt += `Me apresente o checklist preenchido antes de finalizar.\n`;
+  }
+
+  // Render with highlights
+  const highlighted = prompt
+    .replace(/^(## .+)$/gm, '<span class="section-label">$1</span>')
+    .replace(/^(### .+)$/gm, '<span class="section-label">$1</span>')
+    .replace(/(NUNCA|SEMPRE|ANTES|NÃO|AGUARDE)/g, '<span class="rule-text">$1</span>');
+
+  document.getElementById('output').innerHTML = highlighted;
+
+  // Stats
+  const words = prompt.split(/\s+/).filter(Boolean).length;
+  const chars = prompt.length;
+  const lines = prompt.split('\n').length;
+  document.getElementById('stats').innerHTML =
+    `<span><strong>${words}</strong> palavras</span>` +
+    `<span><strong>${chars.toLocaleString()}</strong> caracteres</span>` +
+    `<span><strong>${lines}</strong> linhas</span>` +
+    `<span><strong>${activeRules.length}</strong> regras selecionadas</span>`;
+
+  // Store raw text for copy
+  document.getElementById('output').dataset.raw = prompt;
+}
+
+function copyPrompt() {
+  const raw = document.getElementById('output').dataset.raw || '';
+  navigator.clipboard.writeText(raw).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.classList.add('copied');
+    btn.innerHTML = `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> Copiado!`;
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copiar`;
+    }, 2000);
+  });
+}
+
+// Generate on load
+generate();
+</script>
+</body>
+</html>

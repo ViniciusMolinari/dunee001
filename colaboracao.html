@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dunee 001 — Guia de Colaboracao (Git + Claude Code)</title>
+    <style>
+        :root {
+            --primary: #0EA5E9;
+            --primary-light: #38BDF8;
+            --primary-dark: #0369A1;
+            --accent: #F59E0B;
+            --accent-light: #FCD34D;
+            --bg: #0A0A12;
+            --bg-card: #12131E;
+            --bg-card-hover: #1A1B2E;
+            --bg-code: #07070D;
+            --text: #F1F5F9;
+            --text-muted: #94A3B8;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --info: #6366F1;
+            --purple: #A855F7;
+            --border: #1E2035;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.65;
+            overflow-x: hidden;
+        }
+
+        /* NAV */
+        .top-nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background: rgba(10,10,18,0.92);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px; }
+        .logo span:first-child { background: linear-gradient(135deg, var(--primary), var(--primary-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo span:last-child { color: var(--text-muted); font-weight: 400; font-size: 0.8rem; margin-left: 6px; }
+        .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+        .nav-link {
+            padding: 6px 14px; border-radius: 99px; cursor: pointer;
+            font-size: 0.78rem; font-weight: 600;
+            color: var(--text-muted); text-decoration: none;
+            transition: all 0.2s;
+        }
+        .nav-link:hover { color: var(--text); background: rgba(14,165,233,0.12); }
+
+        /* HERO */
+        .hero {
+            margin-top: 60px;
+            padding: 3.5rem 2rem 2.5rem;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(14,165,233,0.08) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border);
+        }
+        .hero h1 { font-size: 2.2rem; margin-bottom: 0.6rem; font-weight: 800; }
+        .hero h1 span { color: var(--primary-light); }
+        .hero p { color: var(--text-muted); max-width: 720px; margin: 0 auto 1.2rem; font-size: 1rem; }
+        .hero-tag {
+            display: inline-block; padding: 5px 16px; border-radius: 99px;
+            background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.25);
+            font-size: 0.82rem; font-weight: 600; color: var(--primary-light);
+        }
+
+        /* LAYOUT */
+        .wrap { max-width: 1100px; margin: 0 auto; padding: 2.5rem 2rem; }
+
+        /* TOC */
+        .toc {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem 1.8rem;
+            margin-bottom: 3rem;
+        }
+        .toc h2 { font-size: 1rem; margin-bottom: 1rem; color: var(--primary-light); text-transform: uppercase; letter-spacing: 1px; }
+        .toc ol { list-style: none; counter-reset: toc; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.4rem; }
+        .toc ol li { counter-increment: toc; font-size: 0.9rem; }
+        .toc ol li::before { content: counter(toc) ". "; color: var(--primary); font-weight: 700; margin-right: 4px; }
+        .toc a { color: var(--text); text-decoration: none; transition: color 0.2s; }
+        .toc a:hover { color: var(--primary-light); }
+
+        /* SECTION */
+        section { margin-bottom: 3rem; scroll-margin-top: 80px; }
+        .sec-head {
+            display: flex; align-items: center; gap: 14px; margin-bottom: 1rem;
+            padding-bottom: 0.8rem; border-bottom: 1px solid var(--border);
+        }
+        .sec-num {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white; font-weight: 800; font-size: 1rem;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .sec-head h2 { font-size: 1.45rem; font-weight: 700; }
+        .sec-subtitle { color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.5rem; }
+
+        /* CARD */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.4rem 1.6rem;
+            margin-bottom: 1rem;
+        }
+        .card h3 { font-size: 1.05rem; margin-bottom: 0.6rem; }
+        .card h4 { font-size: 0.92rem; margin: 0.8rem 0 0.4rem; color: var(--primary-light); }
+        .card p { color: var(--text-muted); font-size: 0.92rem; margin-bottom: 0.6rem; }
+        .card ul, .card ol { margin-left: 1.2rem; color: var(--text-muted); font-size: 0.92rem; }
+        .card ul li, .card ol li { padding: 3px 0; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+        /* ROLE CARDS */
+        .role-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+        }
+        .role-card.role-front { border-left-color: var(--accent); }
+        .role-card.role-back { border-left-color: var(--success); }
+        .role-card.role-claude { border-left-color: var(--purple); }
+        .role-card .role-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 8px; }
+        .role-card .role-scope { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.8rem; }
+        .role-card ul { list-style: none; margin: 0; }
+        .role-card ul li { padding: 3px 0; font-size: 0.88rem; color: var(--text-muted); padding-left: 16px; position: relative; }
+        .role-card ul li::before { content: '•'; color: var(--primary); position: absolute; left: 4px; }
+
+        /* CODE */
+        pre, code.inline {
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+        }
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            font-size: 0.82rem;
+            line-height: 1.55;
+            margin: 0.6rem 0 1rem;
+            color: #E2E8F0;
+        }
+        pre.terminal::before {
+            content: '● ● ●';
+            display: block;
+            color: var(--text-muted);
+            letter-spacing: 4px;
+            font-size: 0.7rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        code.inline {
+            background: rgba(14,165,233,0.1);
+            border: 1px solid rgba(14,165,233,0.25);
+            padding: 1px 7px;
+            border-radius: 6px;
+            font-size: 0.82em;
+            color: var(--primary-light);
+        }
+        .cmd-prompt { color: var(--success); }
+        .cmd-comment { color: var(--text-muted); font-style: italic; }
+        .cmd-flag { color: var(--accent-light); }
+
+        /* CALLOUT */
+        .callout {
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.2rem;
+            margin: 1rem 0;
+            display: flex; gap: 12px;
+            font-size: 0.9rem;
+        }
+        .callout-icon { font-size: 1.3rem; flex-shrink: 0; line-height: 1.2; }
+        .callout-body strong { color: var(--text); }
+        .callout-info { background: rgba(99,102,241,0.08); border-left: 3px solid var(--info); }
+        .callout-info .callout-body { color: var(--text-muted); }
+        .callout-warn { background: rgba(245,158,11,0.08); border-left: 3px solid var(--warning); }
+        .callout-warn .callout-body { color: var(--text-muted); }
+        .callout-danger { background: rgba(239,68,68,0.08); border-left: 3px solid var(--danger); }
+        .callout-danger .callout-body { color: var(--text-muted); }
+        .callout-ok { background: rgba(16,185,129,0.08); border-left: 3px solid var(--success); }
+        .callout-ok .callout-body { color: var(--text-muted); }
+
+        /* BADGE */
+        .badge {
+            display: inline-block; padding: 2px 10px; border-radius: 99px;
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+            margin-right: 4px;
+        }
+        .badge-front { background: rgba(245,158,11,0.15); color: var(--accent); }
+        .badge-back { background: rgba(16,185,129,0.15); color: var(--success); }
+        .badge-both { background: rgba(14,165,233,0.15); color: var(--primary-light); }
+        .badge-claude { background: rgba(168,85,247,0.15); color: var(--purple); }
+
+        /* TABLE */
+        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 0.6rem 0 1rem; }
+        th { text-align: left; padding: 10px 14px; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2); }
+        td { padding: 10px 14px; border-bottom: 1px solid rgba(30,32,53,0.4); vertical-align: top; }
+        td code.inline { font-size: 0.78em; }
+
+        /* STEPS */
+        .steps { counter-reset: step; list-style: none; }
+        .steps > li {
+            counter-increment: step;
+            padding: 1rem 1rem 1rem 3.5rem;
+            position: relative;
+            margin-bottom: 0.8rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+        }
+        .steps > li::before {
+            content: counter(step);
+            position: absolute;
+            left: 1rem; top: 1rem;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white; font-weight: 800; font-size: 0.82rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .steps > li strong { color: var(--text); }
+        .steps > li p, .steps > li pre { margin-top: 0.4rem; }
+
+        /* BRANCH TREE */
+        .branch-tree {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1.2rem 1.4rem;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.85rem;
+            line-height: 1.9;
+        }
+        .branch-tree .br-main { color: var(--primary-light); font-weight: 700; }
+        .branch-tree .br-feat { color: var(--accent-light); }
+        .branch-tree .br-fix { color: var(--danger); }
+        .branch-tree .br-comment { color: var(--text-muted); }
+
+        /* FOOTER */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* UTIL */
+        .divider { border: 0; height: 1px; background: var(--border); margin: 1.5rem 0; }
+        .mt-2 { margin-top: 1rem; }
+        .mb-2 { margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <div class="logo">
+        <span>Dunee</span><span>001 · Colaboracao</span>
+    </div>
+    <div class="nav-links">
+        <a class="nav-link" href="#visao">Visao</a>
+        <a class="nav-link" href="#stack">Stack</a>
+        <a class="nav-link" href="#setup">Setup</a>
+        <a class="nav-link" href="#claude">Claude Code</a>
+        <a class="nav-link" href="#git">Git Flow</a>
+        <a class="nav-link" href="#responsabilidades">Responsabilidades</a>
+        <a class="nav-link" href="#cheatsheet">Cheatsheet</a>
+    </div>
+</nav>
+
+<div class="hero">
+    <h1>Como vamos trabalhar <span>em 4 maos</span></h1>
+    <p>Guia oficial de colaboracao para o projeto Dunee 001. Dois devs (Front + Back) + Claude Code em cada maquina, integrados via Git. Leia tudo antes do primeiro commit.</p>
+    <span class="hero-tag">GitHub + Vercel + Supabase + Claude Code</span>
+</div>
+
+<div class="wrap">
+
+    <!-- TOC -->
+    <div class="toc">
+        <h2>Indice</h2>
+        <ol>
+            <li><a href="#visao">Visao Geral</a></li>
+            <li><a href="#stack">Stack & Ferramentas</a></li>
+            <li><a href="#responsabilidades">Divisao Front / Back</a></li>
+            <li><a href="#setup">Setup da Maquina</a></li>
+            <li><a href="#repo">Clonando o Repositorio</a></li>
+            <li><a href="#claude">Configurando Claude Code</a></li>
+            <li><a href="#env">Variaveis de Ambiente</a></li>
+            <li><a href="#git">Fluxo Git (branches e commits)</a></li>
+            <li><a href="#pr">Pull Requests & Reviews</a></li>
+            <li><a href="#contrato">Contrato Front x Back</a></li>
+            <li><a href="#qualidade">Regras de Qualidade</a></li>
+            <li><a href="#cheatsheet">Cheatsheet de Comandos</a></li>
+            <li><a href="#comunicacao">Comunicacao do Time</a></li>
+            <li><a href="#troubleshooting">Troubleshooting</a></li>
+        </ol>
+    </div>
+
+    <!-- 1. VISAO -->
+    <section id="visao">
+        <div class="sec-head">
+            <div class="sec-num">1</div>
+            <h2>Visao Geral</h2>
+        </div>
+        <p class="sec-subtitle">Somos 3 agentes trabalhando no mesmo repositorio: dois humanos especialistas e um assistente de IA rodando localmente em cada maquina.</p>
+
+        <div class="grid-3">
+            <div class="role-card role-front">
+                <div class="role-title">&#x1F3A8; Dev Frontend</div>
+                <div class="role-scope">Interface & UX</div>
+                <ul>
+                    <li>Pagina publica por tenant (LP + agendamento)</li>
+                    <li>Painel admin (dashboard, agenda, CRUDs)</li>
+                    <li>Design system em src/components/ui</li>
+                    <li>Hooks de UI e consumo de API</li>
+                    <li>Responsividade mobile-first</li>
+                </ul>
+            </div>
+            <div class="role-card role-back">
+                <div class="role-title">&#x2699;&#xFE0F; Dev Backend</div>
+                <div class="role-scope">API, Dados & Regras</div>
+                <ul>
+                    <li>Schema do Supabase + migrations</li>
+                    <li>RLS (Row Level Security) multi-tenant</li>
+                    <li>API Routes em src/app/api</li>
+                    <li>Servicos (disponibilidade, comissao, audit log)</li>
+                    <li>Zod validators + types gerados</li>
+                </ul>
+            </div>
+            <div class="role-card role-claude">
+                <div class="role-title">&#x1F916; Claude Code (cada dev)</div>
+                <div class="role-scope">Assistente na maquina local</div>
+                <ul>
+                    <li>Le o repo como qualquer dev (via git clone)</li>
+                    <li>Gera codigo, refatora, escreve testes</li>
+                    <li>Le CLAUDE.md e .claude/rules/ antes de agir</li>
+                    <li>Nunca faz push sem aprovacao humana</li>
+                    <li>Cada dev tem o seu Claude local — nao compartilha sessao</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="callout callout-info">
+            <div class="callout-icon">&#x1F4A1;</div>
+            <div class="callout-body"><strong>Principio chave:</strong> a fonte unica da verdade e o <code class="inline">main</code> no GitHub. Tudo que nao esta no Git nao existe. Claude e ferramentas locais <em>assistem</em> o desenvolvimento, mas o fluxo oficial sempre passa por branch + PR + review + merge.</div>
+        </div>
+    </section>
+
+    <!-- 2. STACK -->
+    <section id="stack">
+        <div class="sec-head">
+            <div class="sec-num">2</div>
+            <h2>Stack & Ferramentas</h2>
+        </div>
+        <p class="sec-subtitle">O que cada pessoa precisa instalar e por que.</p>
+
+        <table>
+            <thead>
+                <tr><th>Ferramenta</th><th>Versao</th><th>Para que</th><th>Obrigatorio</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Git</strong></td><td>2.40+</td><td>Controle de versao</td><td>Sim</td></tr>
+                <tr><td><strong>Node.js</strong></td><td>20 LTS</td><td>Runtime do Next.js</td><td>Sim</td></tr>
+                <tr><td><strong>pnpm</strong></td><td>9.x</td><td>Gerenciador de pacotes (mais rapido que npm)</td><td>Sim</td></tr>
+                <tr><td><strong>GitHub CLI</strong> (<code class="inline">gh</code>)</td><td>2.40+</td><td>Criar PRs e gerenciar repo pelo terminal</td><td>Sim</td></tr>
+                <tr><td><strong>Claude Code</strong></td><td>Ultima</td><td>Assistente de IA local</td><td>Sim</td></tr>
+                <tr><td><strong>Docker Desktop</strong></td><td>4.x+</td><td>Rodar Supabase localmente</td><td>Sim</td></tr>
+                <tr><td><strong>Supabase CLI</strong></td><td>1.x+</td><td>Migrations + DB local</td><td>Sim</td></tr>
+                <tr><td><strong>Vercel CLI</strong></td><td>Ultima</td><td>Deploy preview e vars de ambiente</td><td>Recomendado</td></tr>
+                <tr><td><strong>VS Code</strong></td><td>Ultima</td><td>Editor recomendado (integra com Claude Code)</td><td>Recomendado</td></tr>
+            </tbody>
+        </table>
+
+        <div class="callout callout-warn">
+            <div class="callout-icon">&#x26A0;&#xFE0F;</div>
+            <div class="callout-body"><strong>Importante:</strong> usamos <code class="inline">pnpm</code> (nao npm, nao yarn). O <code class="inline">pnpm-lock.yaml</code> e versionado. Misturar gerenciadores quebra o lockfile.</div>
+        </div>
+    </section>
+
+    <!-- 3. RESPONSABILIDADES -->
+    <section id="responsabilidades">
+        <div class="sec-head">
+            <div class="sec-num">3</div>
+            <h2>Divisao Front / Back</h2>
+        </div>
+        <p class="sec-subtitle">Quem toca quais pastas. Ambos podem ler tudo; mudar tem dono.</p>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3><span class="badge badge-front">Frontend</span> Areas de dominio</h3>
+                <ul>
+                    <li><code class="inline">src/app/(public)/[slug]/*</code> — pagina publica do tenant</li>
+                    <li><code class="inline">src/app/admin/*</code> — paineis (exceto API)</li>
+                    <li><code class="inline">src/components/ui/*</code> — design system</li>
+                    <li><code class="inline">src/components/booking/*</code> — fluxo de agendamento</li>
+                    <li><code class="inline">src/components/admin/*</code> — UI do painel</li>
+                    <li><code class="inline">src/hooks/ui/*</code> — hooks de estado de UI</li>
+                    <li><code class="inline">tailwind.config.ts</code>, <code class="inline">app/globals.css</code></li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3><span class="badge badge-back">Backend</span> Areas de dominio</h3>
+                <ul>
+                    <li><code class="inline">src/app/api/**</code> — todas as API Routes</li>
+                    <li><code class="inline">src/lib/supabase/*</code> — clients e helpers</li>
+                    <li><code class="inline">src/lib/services/*</code> — regras de negocio</li>
+                    <li><code class="inline">src/lib/validations/*</code> — Zod schemas</li>
+                    <li><code class="inline">src/lib/api/auth.ts</code> — requireAdmin, etc.</li>
+                    <li><code class="inline">supabase/migrations/*</code> — SQL</li>
+                    <li><code class="inline">src/types/database.ts</code> — gerado do Supabase</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3><span class="badge badge-both">Ambos</span> Zonas compartilhadas</h3>
+            <ul>
+                <li><code class="inline">src/hooks/useAuth.ts</code>, <code class="inline">useTenant.ts</code> — coordenar em PR</li>
+                <li><code class="inline">src/types/*</code> (exceto database.ts) — tipos de dominio</li>
+                <li><code class="inline">CLAUDE.md</code>, <code class="inline">.claude/rules/*</code> — regras do projeto</li>
+                <li><code class="inline">README.md</code>, docs</li>
+                <li>Configs raiz: <code class="inline">next.config.ts</code>, <code class="inline">tsconfig.json</code>, <code class="inline">package.json</code></li>
+            </ul>
+        </div>
+
+        <div class="callout callout-info">
+            <div class="callout-icon">&#x1F91D;</div>
+            <div class="callout-body"><strong>Regra de ouro:</strong> se sua mudanca mexe numa area do outro, <em>abra PR separado</em> e marque o dono como reviewer. Nunca empurre mudanca de area do outro junto com sua feature.</div>
+        </div>
+    </section>
+
+    <!-- 4. SETUP -->
+    <section id="setup">
+        <div class="sec-head">
+            <div class="sec-num">4</div>
+            <h2>Setup da Maquina (uma vez)</h2>
+        </div>
+        <p class="sec-subtitle">Execute na ordem. Se algo falhar, pare e pergunte no chat do time antes de forcar.</p>
+
+        <ol class="steps">
+            <li>
+                <strong>Instalar Node 20 via nvm</strong>
+                <pre class="terminal"><span class="cmd-comment"># macOS / Linux</span>
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+nvm install 20
+nvm use 20
+node -v  <span class="cmd-comment"># deve imprimir v20.x.x</span></pre>
+            </li>
+            <li>
+                <strong>Instalar pnpm</strong>
+                <pre class="terminal">npm install -g pnpm
+pnpm -v</pre>
+            </li>
+            <li>
+                <strong>Instalar GitHub CLI e autenticar</strong>
+                <pre class="terminal"><span class="cmd-comment"># macOS</span>
+brew install gh
+gh auth login  <span class="cmd-comment"># escolha GitHub.com → HTTPS → Login with browser</span></pre>
+            </li>
+            <li>
+                <strong>Instalar Docker Desktop</strong>
+                <p>Baixe em <code class="inline">docker.com/products/docker-desktop</code>. Abra pelo menos uma vez para aceitar termos.</p>
+            </li>
+            <li>
+                <strong>Instalar Supabase CLI</strong>
+                <pre class="terminal">brew install supabase/tap/supabase
+supabase -v</pre>
+            </li>
+            <li>
+                <strong>Instalar Vercel CLI (opcional mas recomendado)</strong>
+                <pre class="terminal">pnpm add -g vercel
+vercel login</pre>
+            </li>
+            <li>
+                <strong>Instalar Claude Code</strong>
+                <p>Siga <code class="inline">docs.claude.com/claude-code</code>. Apos instalar:</p>
+                <pre class="terminal">claude  <span class="cmd-comment"># abre a CLI; na primeira execucao, pede login</span></pre>
+            </li>
+        </ol>
+    </section>
+
+    <!-- 5. REPO -->
+    <section id="repo">
+        <div class="sec-head">
+            <div class="sec-num">5</div>
+            <h2>Clonando o Repositorio</h2>
+        </div>
+        <p class="sec-subtitle">O repo oficial vive no GitHub da organizacao. Nao clone de fork — use o remoto oficial.</p>
+
+        <ol class="steps">
+            <li>
+                <strong>Clonar via HTTPS (recomendado com gh auth)</strong>
+                <pre class="terminal">cd ~/Projetos
+gh repo clone ViniciusMolinari/dunee001
+cd dunee001</pre>
+            </li>
+            <li>
+                <strong>Instalar dependencias</strong>
+                <pre class="terminal">pnpm install</pre>
+            </li>
+            <li>
+                <strong>Subir o Supabase local</strong>
+                <pre class="terminal">supabase start  <span class="cmd-comment"># baixa imagens Docker na primeira vez (~5min)</span></pre>
+                <p>Ao final, imprime as URLs locais (API, Studio, DB). <strong>Anote a anon key e service_role key</strong> — vao pro <code class="inline">.env.local</code>.</p>
+            </li>
+            <li>
+                <strong>Aplicar migrations no banco local</strong>
+                <pre class="terminal">supabase db reset  <span class="cmd-comment"># aplica todas as migrations do zero</span></pre>
+            </li>
+            <li>
+                <strong>Criar o <code class="inline">.env.local</code></strong>
+                <p>Copie <code class="inline">.env.example</code> → <code class="inline">.env.local</code> e preencha (ver secao <a href="#env">7</a>).</p>
+            </li>
+            <li>
+                <strong>Rodar o dev server</strong>
+                <pre class="terminal">pnpm dev  <span class="cmd-comment"># abre em http://localhost:3000</span></pre>
+            </li>
+        </ol>
+    </section>
+
+    <!-- 6. CLAUDE -->
+    <section id="claude">
+        <div class="sec-head">
+            <div class="sec-num">6</div>
+            <h2>Configurando Claude Code</h2>
+        </div>
+        <p class="sec-subtitle">Cada dev roda Claude Code localmente, na sua maquina, dentro da pasta do projeto. O Claude le o repo via filesystem — nao precisa de servidor, nao precisa de VPS, nao compartilha sessao.</p>
+
+        <div class="card">
+            <h3>Como funciona a integracao Claude + Git</h3>
+            <p>Claude Code ja roda dentro da pasta do repositorio. Ele:</p>
+            <ul>
+                <li>Le arquivos com as mesmas permissoes que voce;</li>
+                <li>Executa comandos git (<code class="inline">git status</code>, <code class="inline">git diff</code>, <code class="inline">gh pr create</code>);</li>
+                <li>Respeita o <code class="inline">CLAUDE.md</code> e <code class="inline">.claude/rules/</code> como contexto obrigatorio;</li>
+                <li><strong>Nunca</strong> faz push sem que voce mande explicitamente;</li>
+                <li>Nao tem acesso a credenciais que nao estao no seu <code class="inline">.env.local</code>.</li>
+            </ul>
+        </div>
+
+        <h3 class="mt-2 mb-2">Primeira execucao</h3>
+        <ol class="steps">
+            <li>
+                <strong>Entrar na pasta do projeto</strong>
+                <pre class="terminal">cd ~/Projetos/dunee001</pre>
+            </li>
+            <li>
+                <strong>Abrir o Claude Code</strong>
+                <pre class="terminal">claude</pre>
+                <p>Na primeira vez, ele pergunta sobre permissoes (leitura, edicao, bash). Aceite as padroes.</p>
+            </li>
+            <li>
+                <strong>Deixar o Claude ler o contexto do projeto</strong>
+                <p>Peca: <em>"Leia o CLAUDE.md e o .claude/rules/ antes de comecar qualquer tarefa."</em> Ele carrega as regras do projeto na sessao.</p>
+            </li>
+            <li>
+                <strong>Fixar o modelo e estilo</strong>
+                <p>Use <code class="inline">/model</code> para escolher o modelo (recomendado: o mais capaz disponivel). Use <code class="inline">/config</code> para ajustar preferencias locais.</p>
+            </li>
+        </ol>
+
+        <div class="callout callout-danger">
+            <div class="callout-icon">&#x1F6A8;</div>
+            <div class="callout-body"><strong>Regras ao trabalhar com Claude:</strong><br>
+            1. Sempre peca o plano antes de implementar (<em>"Apresente o plano e aguarde aprovacao"</em>).<br>
+            2. Nunca deixe o Claude dar <code class="inline">git push</code> direto — revise o diff primeiro.<br>
+            3. Nunca deixe o Claude mexer no <code class="inline">.env.local</code> — secrets sao pessoais.<br>
+            4. Se o Claude sugerir workaround esquisito, peca a solucao profissional.
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Permissoes sugeridas (<code class="inline">.claude/settings.local.json</code>)</h3>
+            <p>Cada dev cria o seu. Nao versionar este arquivo.</p>
+            <pre>{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(supabase *)",
+      "Bash(gh pr *)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(git reset *)",
+      "Bash(rm *)"
+    ]
+  }
+}</pre>
+        </div>
+    </section>
+
+    <!-- 7. ENV -->
+    <section id="env">
+        <div class="sec-head">
+            <div class="sec-num">7</div>
+            <h2>Variaveis de Ambiente</h2>
+        </div>
+        <p class="sec-subtitle">Segredos sao <strong>pessoais</strong>. Nunca commitar <code class="inline">.env.local</code>. Nunca passar chave por Slack/WhatsApp — use 1Password ou Vercel env vars.</p>
+
+        <div class="card">
+            <h3>Arquivos de ambiente</h3>
+            <table>
+                <thead><tr><th>Arquivo</th><th>Finalidade</th><th>Commitado?</th></tr></thead>
+                <tbody>
+                    <tr><td><code class="inline">.env.example</code></td><td>Template com todas as chaves, sem valores reais</td><td><strong>Sim</strong></td></tr>
+                    <tr><td><code class="inline">.env.local</code></td><td>Suas credenciais pessoais (dev local)</td><td>Nao — no gitignore</td></tr>
+                    <tr><td>Vercel env vars</td><td>Staging e producao</td><td>Nao se aplica (painel Vercel)</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3>Conteudo do <code class="inline">.env.local</code> (dev)</h3>
+            <pre><span class="cmd-comment"># Supabase local (vem do `supabase start`)</span>
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
+
+<span class="cmd-comment"># App</span>
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development</pre>
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-icon">&#x1F512;</div>
+            <div class="callout-body"><strong>Nunca:</strong> commitar secrets, logar secrets, usar <code class="inline">|| 'fallback-secret'</code>, hardcodar chaves no codigo. O pre-commit bloqueia isso automaticamente.</div>
+        </div>
+    </section>
+
+    <!-- 8. GIT FLOW -->
+    <section id="git">
+        <div class="sec-head">
+            <div class="sec-num">8</div>
+            <h2>Fluxo Git</h2>
+        </div>
+        <p class="sec-subtitle">Trunk-based simplificado. <code class="inline">main</code> sempre verde, sempre deployavel. Features em branches curtas (1-3 dias max).</p>
+
+        <div class="card">
+            <h3>Arvore de branches</h3>
+            <div class="branch-tree">
+<span class="br-main">main</span>                                    <span class="br-comment"># producao, protegida</span>
+ ├── <span class="br-feat">feat/agenda-ui</span>                     <span class="br-comment"># dev front</span>
+ ├── <span class="br-feat">feat/appointments-api</span>              <span class="br-comment"># dev back</span>
+ ├── <span class="br-feat">feat/multi-tenant-middleware</span>       <span class="br-comment"># dev back</span>
+ ├── <span class="br-feat">feat/booking-flow-public</span>           <span class="br-comment"># dev front</span>
+ ├── <span class="br-fix">fix/availability-timezone</span>          <span class="br-comment"># bug fix</span>
+ └── <span class="br-fix">chore/update-deps</span>                  <span class="br-comment"># manutencao</span>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>Nomenclatura de branches</h3>
+                <ul>
+                    <li><code class="inline">feat/*</code> — nova feature</li>
+                    <li><code class="inline">fix/*</code> — correcao de bug</li>
+                    <li><code class="inline">chore/*</code> — manutencao, deps, config</li>
+                    <li><code class="inline">refactor/*</code> — refactor sem mudar comportamento</li>
+                    <li><code class="inline">docs/*</code> — apenas documentacao</li>
+                    <li><code class="inline">test/*</code> — apenas testes</li>
+                </ul>
+                <p class="mt-2">Use <code class="inline">kebab-case</code> curto e descritivo.</p>
+            </div>
+            <div class="card">
+                <h3>Conventional Commits</h3>
+                <p>Padrao obrigatorio para mensagens de commit.</p>
+                <pre><span class="cmd-comment"># Formato</span>
+&lt;tipo&gt;(&lt;escopo&gt;): &lt;descricao curta&gt;
+
+<span class="cmd-comment"># Exemplos</span>
+feat(agenda): add week view
+fix(booking): correct timezone in slots
+chore(deps): bump next to 16.1
+refactor(api): extract availability service
+docs(readme): update local setup steps</pre>
+            </div>
+        </div>
+
+        <h3 class="mt-2 mb-2">Ciclo de trabalho (dia-a-dia)</h3>
+        <ol class="steps">
+            <li>
+                <strong>Atualize main e crie sua branch</strong>
+                <pre class="terminal">git checkout main
+git pull origin main
+git checkout -b feat/nome-da-feature</pre>
+            </li>
+            <li>
+                <strong>Desenvolva</strong>
+                <p>Use Claude Code para gerar/refatorar. Commits pequenos e frequentes (cada commit = uma mudanca coerente).</p>
+            </li>
+            <li>
+                <strong>Commit (pre-commit hook roda validate-rules.sh)</strong>
+                <pre class="terminal">git add src/app/admin/agenda/page.tsx
+git commit -m "feat(agenda): add filter by professional"</pre>
+                <p>Se o hook bloquear, <strong>corrija a causa</strong>. Nunca use <code class="inline">--no-verify</code>.</p>
+            </li>
+            <li>
+                <strong>Push da branch</strong>
+                <pre class="terminal">git push -u origin feat/nome-da-feature</pre>
+            </li>
+            <li>
+                <strong>Abrir PR</strong>
+                <pre class="terminal">gh pr create --fill  <span class="cmd-comment"># usa commits como descricao</span></pre>
+                <p>Vercel cria preview automaticamente. CI roda typecheck + lint + testes.</p>
+            </li>
+        </ol>
+
+        <div class="callout callout-warn">
+            <div class="callout-icon">&#x26A0;&#xFE0F;</div>
+            <div class="callout-body"><strong>Nunca force push em <code class="inline">main</code>.</strong> Em sua propria branch, <code class="inline">--force-with-lease</code> e OK apos rebase. Em branches de outra pessoa, nunca.</div>
+        </div>
+    </section>
+
+    <!-- 9. PR -->
+    <section id="pr">
+        <div class="sec-head">
+            <div class="sec-num">9</div>
+            <h2>Pull Requests & Reviews</h2>
+        </div>
+        <p class="sec-subtitle">Todo codigo entra em main via PR. Nada direto. Review de pelo menos 1 pessoa.</p>
+
+        <div class="card">
+            <h3>Template de PR (auto via <code class="inline">.github/pull_request_template.md</code>)</h3>
+            <pre>## Resumo
+- Bullet 1
+- Bullet 2
+
+## Mudancas principais
+- Arquivo X: o que mudou
+- Arquivo Y: o que mudou
+
+## Como testar
+1. Passo 1
+2. Passo 2
+
+## Checklist
+- [ ] Dentro dos limites de linha (page 300, componente 200, hook/service 250, API 150)
+- [ ] Logica de negocio separada da UI
+- [ ] Sem duplicacao de codigo existente
+- [ ] Zod validators para inputs de API
+- [ ] Logger em todos os catch server-side
+- [ ] Preview Vercel testado</pre>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>Regras de merge</h3>
+                <ul>
+                    <li>CI verde (typecheck + lint + test)</li>
+                    <li>1 aprovacao do owner da area ou do outro dev</li>
+                    <li>Sem conflitos com main</li>
+                    <li>Preview Vercel funcionando</li>
+                    <li>Merge via <strong>Squash & Merge</strong> (historico limpo em main)</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Tamanho ideal de PR</h3>
+                <ul>
+                    <li>Ate 400 linhas de diff — revisa em 15 min</li>
+                    <li>400-800 linhas — aceitavel, revisa em 30 min</li>
+                    <li>&gt;800 linhas — <strong>quebre em PRs menores</strong></li>
+                </ul>
+                <p class="mt-2">PR gigante = review ruim = bug em producao.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 10. CONTRATO -->
+    <section id="contrato">
+        <div class="sec-head">
+            <div class="sec-num">10</div>
+            <h2>Contrato Front x Back</h2>
+        </div>
+        <p class="sec-subtitle">Como front e back combinam interface sem virar telefone-sem-fio.</p>
+
+        <div class="card">
+            <h3>1. Types gerados do Supabase = fonte unica</h3>
+            <p>Backend roda <code class="inline">supabase gen types typescript --local &gt; src/types/database.ts</code> sempre que muda schema. Esse arquivo e <strong>commitado</strong>. Frontend importa daqui — nunca redefine tipo.</p>
+            <pre><span class="cmd-comment">// Correto (frontend)</span>
+import type { Database } from '@/types/database'
+type Appointment = Database['public']['Tables']['appointments']['Row']
+
+<span class="cmd-comment">// Errado — nao redefina tipo de tabela</span>
+interface Appointment { id: string; ... }</pre>
+        </div>
+
+        <div class="card">
+            <h3>2. Validators Zod = contrato de API</h3>
+            <p>Backend define schema em <code class="inline">src/lib/validations/&lt;recurso&gt;.ts</code>. Front importa o <em>mesmo</em> schema pra validar o form antes de mandar. Um contrato, zero divergencia.</p>
+            <pre><span class="cmd-comment">// src/lib/validations/appointments.ts (BACK define)</span>
+export const createAppointmentSchema = z.object({
+  serviceId: z.string().uuid(),
+  professionalId: z.string().uuid(),
+  startAt: z.string().datetime(),
+  clientName: z.string().min(2),
+  clientPhone: z.string().min(10),
+})
+
+<span class="cmd-comment">// Front e back usam o mesmo import</span>
+import { createAppointmentSchema } from '@/lib/validations/appointments'</pre>
+        </div>
+
+        <div class="card">
+            <h3>3. Mock de API durante desenvolvimento paralelo</h3>
+            <p>Se o back ainda nao terminou a API <code class="inline">POST /api/appointments</code>, o front nao espera. Usa MSW (Mock Service Worker) em <code class="inline">src/mocks/</code> para mockar a resposta combinada via Zod schema. Quando back entrega, desliga o mock.</p>
+        </div>
+
+        <div class="card">
+            <h3>4. Canal de combinado</h3>
+            <p>Toda nova rota de API entra numa issue "API Contract: POST /api/xxx" com:</p>
+            <ul>
+                <li>Payload (link para Zod schema)</li>
+                <li>Response shape</li>
+                <li>Status codes esperados</li>
+                <li>Regras de autorizacao</li>
+            </ul>
+            <p>Front + back concordam no issue <strong>antes</strong> de codar.</p>
+        </div>
+    </section>
+
+    <!-- 11. QUALIDADE -->
+    <section id="qualidade">
+        <div class="sec-head">
+            <div class="sec-num">11</div>
+            <h2>Regras de Qualidade</h2>
+        </div>
+        <p class="sec-subtitle">Automatizadas no pre-commit e na CI. Leia o <code class="inline">CLAUDE.md</code> do projeto — essas regras sao obrigatorias.</p>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>Limites de linhas</h3>
+                <ul>
+                    <li>Page: <strong>300</strong></li>
+                    <li>Componente: <strong>200</strong></li>
+                    <li>Hook / Service: <strong>250</strong></li>
+                    <li>API Route: <strong>150</strong></li>
+                </ul>
+                <p class="mt-2">Estourou? Extraia hook, sub-componente ou service.</p>
+            </div>
+            <div class="card">
+                <h3>Anti-patterns bloqueantes</h3>
+                <ul>
+                    <li><code class="inline">&lt;img&gt;</code> → <code class="inline">next/image</code></li>
+                    <li><code class="inline">console.error</code> server-side → <code class="inline">logger</code></li>
+                    <li><code class="inline">Math.random()</code> para ID → <code class="inline">generateId()</code></li>
+                    <li><code class="inline">.toFixed().replace()</code> moeda → <code class="inline">formatMoney()</code></li>
+                    <li><code class="inline">isAdmin()</code> local → <code class="inline">requireAdmin()</code></li>
+                    <li>Cache manual de data → <code class="inline">date-fns</code></li>
+                    <li>Fallback de secret → <code class="inline">throw</code></li>
+                    <li><code class="inline">catch</code> vazio → <code class="inline">logger</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="callout callout-ok">
+            <div class="callout-icon">&#x2705;</div>
+            <div class="callout-body"><strong>Tudo isso e validado automaticamente no commit.</strong> O pre-commit roda <code class="inline">validate-rules.sh</code>. Se falhar, leia a mensagem e corrija — nunca pule.</div>
+        </div>
+    </section>
+
+    <!-- 12. CHEATSHEET -->
+    <section id="cheatsheet">
+        <div class="sec-head">
+            <div class="sec-num">12</div>
+            <h2>Cheatsheet de Comandos</h2>
+        </div>
+        <p class="sec-subtitle">Cola pra abrir em segunda tela.</p>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>Dia-a-dia</h3>
+                <pre><span class="cmd-comment"># Atualizar main</span>
+git checkout main &amp;&amp; git pull
+
+<span class="cmd-comment"># Criar branch</span>
+git checkout -b feat/minha-feature
+
+<span class="cmd-comment"># Rodar dev</span>
+pnpm dev
+
+<span class="cmd-comment"># Subir Supabase</span>
+supabase start
+supabase db reset     <span class="cmd-comment"># reset + re-aplica migrations</span>
+
+<span class="cmd-comment"># Gerar types</span>
+pnpm db:types
+
+<span class="cmd-comment"># Commit</span>
+git add -p
+git commit -m "feat(x): y"
+
+<span class="cmd-comment"># Push + PR</span>
+git push -u origin HEAD
+gh pr create --fill</pre>
+            </div>
+            <div class="card">
+                <h3>Investigacao</h3>
+                <pre><span class="cmd-comment"># Ver logs do Supabase</span>
+supabase status
+supabase logs
+
+<span class="cmd-comment"># Abrir Supabase Studio</span>
+open http://127.0.0.1:54323
+
+<span class="cmd-comment"># Ver diff staged</span>
+git diff --cached
+
+<span class="cmd-comment"># Ver PR checks</span>
+gh pr checks
+gh pr view --web
+
+<span class="cmd-comment"># Typecheck</span>
+pnpm typecheck
+
+<span class="cmd-comment"># Lint + fix</span>
+pnpm lint --fix
+
+<span class="cmd-comment"># Testes</span>
+pnpm test
+pnpm test:e2e</pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Claude Code — prompts uteis</h3>
+            <ul>
+                <li><strong>Iniciar tarefa:</strong> <em>"Leia CLAUDE.md e .claude/rules/, explore a pasta X, apresente plano e aguarde aprovacao."</em></li>
+                <li><strong>Refatorar:</strong> <em>"Refatore este componente mantendo comportamento identico. Respeite limite de 200 linhas."</em></li>
+                <li><strong>Criar feature:</strong> <em>"Implemente a API /api/xxx conforme o Zod schema em src/lib/validations/xxx.ts."</em></li>
+                <li><strong>Debug:</strong> <em>"Investigue o erro X, liste as causas possiveis com evidencias do codigo."</em></li>
+                <li><strong>Code review:</strong> <em>"Revise o diff da branch atual contra os checklists do CLAUDE.md."</em></li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 13. COMUNICACAO -->
+    <section id="comunicacao">
+        <div class="sec-head">
+            <div class="sec-num">13</div>
+            <h2>Comunicacao do Time</h2>
+        </div>
+        <p class="sec-subtitle">Assincrono por padrao. Sincrono quando necessario.</p>
+
+        <table>
+            <thead><tr><th>Canal</th><th>Para que</th><th>SLA</th></tr></thead>
+            <tbody>
+                <tr><td>GitHub Issues</td><td>Bugs, ideias, tarefas, contrato de API</td><td>48h</td></tr>
+                <tr><td>PR comments</td><td>Duvida sobre codigo especifico</td><td>24h util</td></tr>
+                <tr><td>WhatsApp do time</td><td>Urgencia real (prod quebrada, bloqueio)</td><td>Imediato</td></tr>
+                <tr><td>Reuniao semanal (30min)</td><td>Alinhamento de roadmap</td><td>Toda segunda, 10h</td></tr>
+                <tr><td>Daily escrita (texto)</td><td>O que fiz / fazendo / bloqueio</td><td>10h da manha</td></tr>
+            </tbody>
+        </table>
+
+        <div class="callout callout-info">
+            <div class="callout-icon">&#x1F4AC;</div>
+            <div class="callout-body"><strong>Regra:</strong> se explicar por texto leva mais de 5min, agende call de 15min. Nao passe horas no WhatsApp discutindo arquitetura.</div>
+        </div>
+    </section>
+
+    <!-- 14. TROUBLESHOOTING -->
+    <section id="troubleshooting">
+        <div class="sec-head">
+            <div class="sec-num">14</div>
+            <h2>Troubleshooting</h2>
+        </div>
+        <p class="sec-subtitle">Problemas comuns e solucao rapida.</p>
+
+        <div class="card">
+            <h4>&#x1F504; <code class="inline">supabase start</code> trava ou falha</h4>
+            <pre>supabase stop
+docker ps                  <span class="cmd-comment"># confirme que Docker esta rodando</span>
+supabase start --debug</pre>
+        </div>
+
+        <div class="card">
+            <h4>&#x1F504; Erro de types apos mudanca de schema</h4>
+            <pre>pnpm db:types              <span class="cmd-comment"># regenera src/types/database.ts</span>
+pnpm typecheck</pre>
+        </div>
+
+        <div class="card">
+            <h4>&#x1F504; Pre-commit bloqueando commit</h4>
+            <p>Leia a mensagem — o <code class="inline">validate-rules.sh</code> aponta o arquivo e a regra violada. Corrija. Nunca use <code class="inline">--no-verify</code>.</p>
+        </div>
+
+        <div class="card">
+            <h4>&#x1F504; PR com conflito em main</h4>
+            <pre>git checkout main
+git pull
+git checkout feat/minha-branch
+git rebase main
+<span class="cmd-comment"># resolva conflitos arquivo por arquivo</span>
+git add .
+git rebase --continue
+git push --force-with-lease</pre>
+        </div>
+
+        <div class="card">
+            <h4>&#x1F504; Claude sugeriu algo que quebra regra do projeto</h4>
+            <p>Responda: <em>"Isso viola a regra X do CLAUDE.md. Proponha alternativa que respeite o limite/padrao."</em> Claude e assistente, nao oraculo — voce manda.</p>
+        </div>
+    </section>
+
+</div>
+
+<footer>
+    Dunee 001 · Guia de Colaboracao · Versao 1.0 · Revise periodicamente · Pergunte antes de inventar
+</footer>
+
+</body>
+</html>
